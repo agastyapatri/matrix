@@ -19,8 +19,8 @@ matrix/
     |-matrix.h
     |-matrix.c
     |-functional.h
-    |-linalg.h
-    |-linalg.c
+    |-linalg.h  // under construction!   
+    |-linalg.c  // under construction!     
 ```
 
 
@@ -28,8 +28,22 @@ matrix/
 Refer to [the NumPy linear algebra reference](https://numpy.org/doc/stable/reference/routines.linalg.html) for design inspiration.
 
 
-### **Matrix and vector products** 
-### **Decompositions**
-### **Matrix Eigenvalues** 
-### **Norms and other numbers** 
+##  **Roadmap** 
+The next steps are to build out `linalg.h` with more abstracted linear algebra:
 
+
+-   Matrix and vector products
+-   Decompositions
+-   Matrix Eigenvalues
+-   Norms and other numbers
+
+
+##  **Building and using this library** 
+I do not recommended using this library (yet) for anything even remotely performant or stable. There are many wrinkles waiting to be ironed out, including a more robust testing framework. Using some BLAS / LAPACK descendant is always going to be the better option. For simple hobbyist code, however, the API is simple enough to get up and running quickly.
+
+```
+clang -std=c17 -Wall -Wextra -O3 -c matrix.c -o matrix.o 
+ar rcs libmatrix.a matrix.o 
+rm matrix.o
+```
+Do not forget to add `-Ipath/to/matrix.h` in your project LSP settings.
