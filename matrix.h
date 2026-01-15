@@ -76,6 +76,10 @@ void matrix_add_rowwise(matrix* mat, matrix* vec, matrix* out);
 //	Adds a matrix and a column vector by col-wise broadcasting of the column vector (mx1) matrix
 void matrix_add_colwise(matrix* mat, matrix* vec, matrix* out);
 
+matrix* matrix_sort(const matrix* m);
+// double matrix_search(const matrix* m, double element);
+
+
 
 
 

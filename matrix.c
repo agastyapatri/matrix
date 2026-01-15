@@ -7,6 +7,8 @@
 
 
 
+
+
 matrix* matrix_alloc(int ROWS, int COLS){
 	matrix* m = calloc(1, sizeof(matrix));
 	m->cols = COLS; 

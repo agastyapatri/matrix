@@ -29,13 +29,28 @@ Refer to [the NumPy linear algebra reference](https://numpy.org/doc/stable/refer
 
 
 ##  **Roadmap** 
-The next steps are to build out `linalg.h` with more abstracted linear algebra:
+The next steps are to build out `linalg.h` with more abstracted linear algebra. 
 
+In no particular order:
 
--   Matrix and vector products
--   Decompositions
--   Matrix Eigenvalues
--   Norms and other numbers
+-   Matrix decompositions
+-   Matrix determinant
+-   Matrix eigenvalues
+-   Gaussian elimination
+-   Matrix inverse
+-   Matrix adjoint
+-   Matrix conjugate
+-   Solving systems of linear equations
+-   Solving systems of linear equations
+-   Sparse Matrices
+-   Transforms; DFT, FFT
+-   Matrix trace 
+-   Logical operations on matrices 
+-   Matrix slicing + advanced indexing
+-   Matrix I/O; marshalling and unmarshalling 
+-   Matrix sorting, searching etc.
+-   Parallelizing the underlying routines with SIMD + memory alignment. 
+-   Compatibility with NumPy(?)
 
 
 ##  **Building and using this library** 
