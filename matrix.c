@@ -384,3 +384,46 @@ matrix* matrix_arange(double start, double end, double step){
 	}
 	return out;
 }
+
+double matrix_det(const matrix* m){
+	if(MATRIX_NULL(m))
+		MATRIX_ERROR("NULL matrix in matrix_determinant()\n");
+	if(m->rows == 2 && m->cols == 2){
+		return (get(m, 0, 0)*get(m, 1, 1))-(get(m, 0, 1)*get(m, 1, 0));
+	}
+	return 0;
+}
+
+matrix* matrix_inverse(const matrix* m){
+	matrix* out = matrix_alloc(m->rows, m->cols);
+	if(m->rows == 2 && m->cols == 2){
+		set(out, (1/matrix_det(m))*(get(m, 1, 1)), 0, 0) ; 
+		set(out, (1/matrix_det(m))*(-get(m, 0, 1)), 0, 1) ; 
+		set(out, (1/matrix_det(m))*(-get(m, 1, 0)), 1, 0) ; 
+		set(out, (1/matrix_det(m))*(get(m, 0, 0)), 1, 1) ; 
+	}
+	return out;
+}
+
+double matrix_trace(const matrix* m){
+	if(!is_square(m))
+		MATRIX_ERROR("Matrix argument is not square in matrix_trace()\n");
+	double trace = 0;
+	for(size_t i = 0; i < m->rows; i++){
+		trace += get(m, i, i);
+	}
+	return trace;
+}
+
+void matrix_push_back(matrix* mat, double* array){
+	mat->cols++;
+	mat->data = realloc(mat->data, mat->rows*mat->cols*sizeof(double));
+	for(int i = mat->size; i < mat->rows* mat->cols; i++){
+		mat->data[i] = array[i - mat->size];
+	}
+	mat->size = mat->rows*mat->cols;
+}
+
+
+
+

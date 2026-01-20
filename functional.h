@@ -125,11 +125,11 @@ static inline double matrix_squared_error(double x, double y){
  */ 
 
 
-typedef enum {
-	SIGMOID,
-	RELU, 
-	TANH
-} activations;
+// typedef enum {
+// 	SIGMOID,
+// 	RELU, 
+// 	TANH
+// } activations;
 
 
 #endif // !matrix_INCLUDE_FUNCTIONAL_H

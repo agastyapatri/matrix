@@ -31,6 +31,9 @@ static inline double get(const matrix* m, int i, int j){
 static inline void set(matrix* m, double val, int i, int j){
 	m->data[i*m->cols + j] = val;
 }
+static inline bool is_square(const matrix* m){
+	return (m->rows == m->cols) ? 1 : 0;
+}
 
 
 void matrix_print_shape(matrix* m);
@@ -79,6 +82,15 @@ void matrix_add_colwise(matrix* mat, matrix* vec, matrix* out);
 matrix* matrix_sort(const matrix* m);
 // double matrix_search(const matrix* m, double element);
 
+double matrix_det(const matrix* m);
+matrix* matrix_inverse(const matrix* m);
+double matrix_trace(const matrix* m);
+
+void matrix_push_back(matrix* mat, double* array);
+
+
+//TODO 
+matrix* matrix_from_arrays(double** arrays);
 
 
 
