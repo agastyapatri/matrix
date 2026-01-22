@@ -1,4 +1,3 @@
-//	Core linear algebra lib for neural network applications
 #ifndef MATRIX_H
 #define MATRIX_H
 #include <stddef.h>
@@ -67,6 +66,8 @@ double matrix_min(const matrix* m);
 double matrix_mean(const matrix* m);
 double matrix_std(const matrix* m);
 double matrix_sum(const matrix* m);
+void matrix_grad_on(matrix* m);
+void matrix_grad_off(matrix* m);
 
 
 matrix* matrix_alloc(int ROWS, int COLS);

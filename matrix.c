@@ -40,6 +40,20 @@ matrix* matrix_alloc(int ROWS, int COLS){
 	return m;
 }
 
+void matrix_grad_on(matrix* m){
+	m->requires_grad = 1; 
+	m->grad = (double*)calloc(m->size, sizeof(double)); 
+}
+
+void matrix_grad_off(matrix* m){
+	m->requires_grad = 0; 
+	m->op = NONE;
+	free(m->grad);
+	m->grad = NULL;
+}
+
+
+
 matrix* matrix_ones(int ROWS, int COLS){
 	matrix* m = matrix_alloc(ROWS,  COLS);
 	for(size_t i = 0; i < m->size; i++){
@@ -336,12 +350,15 @@ void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation
 		case(DIV):
 			function = matrix_div;
 			break;
+		case(NONE):
+			perror("None is not a valid operation in matrix_arithmetic()\n");
+			exit(EXIT_FAILURE);
 	}
 
 	for(size_t i = 0; i < inp1->size; i++)
 		out->data[i] = function(inp1->data[i], inp2->data[i]);
 
-	out->requires_grad = 1;
+	matrix_grad_on(out);
 	out->op = operation;
 	out->num_prevs = 2;
 	out->previous[0] = inp1; 
