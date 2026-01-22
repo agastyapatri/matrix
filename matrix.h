@@ -5,13 +5,38 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "matrix_math.h"
+
+#ifndef MAX_PREVS
+#define MAX_PREVS 3 
+#endif
+
+
+#ifndef MAX_ARGS
+#define MAX_ARGS 5 
+#endif
+
+
+#ifndef MAX_PARAM_MATRICES
+#define MAX_PARAM_MATRICES 10
+#endif
 
 
 typedef struct matrix{
+	//	core metadata
 	size_t rows, cols;
 	size_t size;
 	int* ref_count;
-	double *data; 
+	double* data; 
+
+
+	//	autograd metadata
+	bool requires_grad;
+	double* grad;
+	OPTYPE op;
+	struct matrix* previous[MAX_PREVS];
+	int num_prevs;
+
 } matrix;
 
 
@@ -56,15 +81,13 @@ matrix* matrix_reshape(matrix* m, size_t ROWS, size_t COLS);
 
 
 //	Elementwise addition for two matrix_scale
-void matrix_add(matrix* a, matrix* b, matrix* c);
 void matrix_scale(matrix* a, double b);
-void matrix_sub(matrix* a, matrix* b, matrix* c);
 void matrix_hadamard(matrix* a, matrix* b, matrix* c);
 bool matrix_equality(matrix* a, matrix* b);
 void matrix_map(matrix* m, double (*function)(double x));
 void matmul(matrix* a, matrix* b, matrix* c);
 
-void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, double (*function)(double x, double y));
+void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation);
 //	Replaces the elements of an existing matrix with random elements between -1 and 1
 void matrix_randomize(matrix* m, double (*function)(double, double));
 

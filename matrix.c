@@ -3,10 +3,25 @@
 #include <stdlib.h> 
 #include <stdio.h>
 #include <time.h>
-#include "functional.h"
+#include "matrix_math.h"
 
 
-
+char* get_optype_string(OPTYPE op){
+	switch (op) {
+		case ADD: 
+			return "add";
+		case SUB: 
+			return "sub";
+		case MUL: 
+			return "mul";
+		case DIV: 
+			return "div";
+		case NONE: 
+			return "none";
+		default:
+			"none";
+	}
+}
 
 
 matrix* matrix_alloc(int ROWS, int COLS){
@@ -17,8 +32,14 @@ matrix* matrix_alloc(int ROWS, int COLS){
 	m->ref_count = (int*)calloc(1, sizeof(int));
 	(*(m->ref_count))++;
 	m->data = (double*)calloc(m->size, sizeof(double));
+
+	m->requires_grad = 0; 
+	m->grad = NULL;
+	m->op = NONE;
+	m->num_prevs = 0;
 	return m;
 }
+
 matrix* matrix_ones(int ROWS, int COLS){
 	matrix* m = matrix_alloc(ROWS,  COLS);
 	for(size_t i = 0; i < m->size; i++){
@@ -50,15 +71,19 @@ void matrix_print(matrix *m){
 	if(MATRIX_NULL(m)){
 		MATRIX_ERROR("ERROR: argument in print_matrix() is NULL\n");
 	}
-	printf("[");
+	char* opstring = get_optype_string(m->op);
+	printf("matrix(\n\t[");
 	for (size_t i = 0; i < m->rows ; i++) {
+		if(i>=1) printf("\t");
+		printf("[");
 		for (size_t j = 0; j < m->cols ; j++) {
 			printf("%f", m->data[i*m->cols + j]);
 			if(!(j == m->cols-1)) printf(", ");
 		}
-		if(!(i == m->rows-1)) printf("\n");
-	}
-	printf("]\n");
+		printf("]");
+		if(!(i == m->rows-1)) printf(",\n");
+	};
+	printf("],\nrequires_grad = %d, optype = %s)\n", m->requires_grad, opstring);
 }
 
 
@@ -113,23 +138,23 @@ matrix* matrix_reshape(matrix* m, size_t ROWS, size_t COLS){
 }
 
 
-void matrix_add(matrix* a, matrix* b, matrix* c){
-	if(MATRIX_NULL(a) || MATRIX_NULL(b) || !c){
-		MATRIX_ERROR("ERROR: matrix argument(s) in add_matrix() is NULL\n");
-	}
-	if(a->cols != b->cols || a->rows != b->rows){
-		MATRIX_ERROR("ERROR: invalid input matrix dimensions in add_matrix()\n");
-	}
-	if ((c->rows != a->rows)  || (c->cols != a->cols)){
-		MATRIX_ERROR("ERROR: invalid output matrix dimensions in add_matrix()\n");
-	} 
-	for(size_t i = 0; i < a->rows; i++){
-		for(size_t j = 0; j < b->cols; j++){
-			c->data[i*c->cols + j] = a->data[i*a->cols + j] + b->data[i*a->cols + j] ;
-			// set(c, (get(a, i, j) + get(b, i, j)), i, j);
-		} 
-	}
-}
+// void matrix_add(matrix* a, matrix* b, matrix* c){
+// 	if(MATRIX_NULL(a) || MATRIX_NULL(b) || !c){
+// 		MATRIX_ERROR("ERROR: matrix argument(s) in add_matrix() is NULL\n");
+// 	}
+// 	if(a->cols != b->cols || a->rows != b->rows){
+// 		MATRIX_ERROR("ERROR: invalid input matrix dimensions in add_matrix()\n");
+// 	}
+// 	if ((c->rows != a->rows)  || (c->cols != a->cols)){
+// 		MATRIX_ERROR("ERROR: invalid output matrix dimensions in add_matrix()\n");
+// 	} 
+// 	for(size_t i = 0; i < a->rows; i++){
+// 		for(size_t j = 0; j < b->cols; j++){
+// 			c->data[i*c->cols + j] = a->data[i*a->cols + j] + b->data[i*a->cols + j] ;
+// 			// set(c, (get(a, i, j) + get(b, i, j)), i, j);
+// 		} 
+// 	}
+// }
 
 void matrix_scale(matrix* a, double b){
 	if(MATRIX_NULL(a)){
@@ -140,23 +165,26 @@ void matrix_scale(matrix* a, double b){
 	}
 } 
 
-void matrix_sub(matrix* a, matrix* b, matrix* c){
-	if(MATRIX_NULL(a) || MATRIX_NULL(b) || !c){
-		MATRIX_ERROR("ERROR: matrix argument(s) in sub_matrix() is NULL\n");
-	}
-	if(a->cols != b->cols || a->rows != b->rows){
-		MATRIX_ERROR("ERROR: invalid input matrix dimensions in sub_matrix()\n");
-	}
-	if ((c->rows != a->rows)  || (c->cols != a->cols)){
-		MATRIX_ERROR("ERROR: invalid output matrix dimensions in sub_matrix()\n");
-	} 
-	for(size_t i = 0; i < a->rows; i++){
-		for(size_t j = 0; j < b->cols; j++){
-			c->data[i*c->cols + j] = a->data[i*a->cols + j] - b->data[i*a->cols + j] ;
-			// set(c, (get(a, i, j) + get(b, i, j)), i, j);
-		} 
-	}
-}
+// void matrix_sub(matrix* a, matrix* b, matrix* c){
+// 	if(MATRIX_NULL(a) || MATRIX_NULL(b) || !c){
+// 		MATRIX_ERROR("ERROR: matrix argument(s) in sub_matrix() is NULL\n");
+// 	}
+// 	if(a->cols != b->cols || a->rows != b->rows){
+// 		MATRIX_ERROR("ERROR: invalid input matrix dimensions in sub_matrix()\n");
+// 	}
+// 	if ((c->rows != a->rows)  || (c->cols != a->cols)){
+// 		MATRIX_ERROR("ERROR: invalid output matrix dimensions in sub_matrix()\n");
+// 	} 
+// 	for(size_t i = 0; i < a->rows; i++){
+// 		for(size_t j = 0; j < b->cols; j++){
+// 			c->data[i*c->cols + j] = a->data[i*a->cols + j] - b->data[i*a->cols + j] ;
+// 			// set(c, (get(a, i, j) + get(b, i, j)), i, j);
+// 		} 
+// 	}
+// }
+
+
+
 void matrix_hadamard(matrix* a, matrix* b, matrix* c){
 	if(MATRIX_NULL(a) || MATRIX_NULL(b) || !c){
 		MATRIX_ERROR("ERROR: matrix argument(s) in mul_elemwise_matrix() is NULL\n");
@@ -237,6 +265,8 @@ void matrix_add_rowwise(matrix* mat,  matrix* vec, matrix* out){
 		} 
 	}
 }
+
+
 void matrix_add_colwise(matrix* mat, matrix* vec, matrix* out){
 	if(MATRIX_NULL(mat) || MATRIX_NULL(vec)){
 		MATRIX_ERROR("Invalid / NULL arguments to matrix_add_colwise()\n");
@@ -285,15 +315,37 @@ void matrix_map(matrix *m, double (*function)(double)){
 		m->data[i] = function(m->data[i]);
 } 
 
-void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, double (*function)(double x, double y)){
+void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation){
 	if(MATRIX_NULL(inp1) || MATRIX_NULL(inp2) || MATRIX_NULL(out)){
 		MATRIX_ERROR("NULL matrix argument(s) in matrix_arithmetic()\n");
 	}
 	if((inp1->rows != inp2->rows) || (inp1->cols != inp2->cols)){
 		MATRIX_ERROR("Invalid input matrix shapes in matrix_arithmetic()\n");
 	}
+	double (*function)(double x, double y);
+	switch (operation) {
+		case(ADD):
+			function = matrix_add;
+			break;
+		case(MUL):
+			function = matrix_mul;
+			break;
+		case(SUB):
+			function = matrix_sub;
+			break;
+		case(DIV):
+			function = matrix_div;
+			break;
+	}
+
 	for(size_t i = 0; i < inp1->size; i++)
 		out->data[i] = function(inp1->data[i], inp2->data[i]);
+
+	out->requires_grad = 1;
+	out->op = operation;
+	out->num_prevs = 2;
+	out->previous[0] = inp1; 
+	out->previous[1] = inp2;
 }
 
 
@@ -416,9 +468,9 @@ double matrix_trace(const matrix* m){
 }
 
 void matrix_push_back(matrix* mat, double* array){
-	mat->cols++;
+	mat->rows++;
 	mat->data = realloc(mat->data, mat->rows*mat->cols*sizeof(double));
-	for(int i = mat->size; i < mat->rows* mat->cols; i++){
+	for(size_t i = mat->size; i < mat->rows* mat->cols; i++){
 		mat->data[i] = array[i - mat->size];
 	}
 	mat->size = mat->rows*mat->cols;
