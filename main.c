@@ -1,25 +1,38 @@
 #include "matrix.h"
+#include "matrix_math.h"
 #include <time.h>
-#define ROWS 5
-#define COLS 5
+#define ROWS 10
+#define COLS 10
 #define MU 0.0
 #define SIGMA 1
+
+void matrelu(matrix* m){
+	for(size_t i = 0 ; i < m->size; i++){
+		m->data[i] = (m->data[i] > 0) ? m->data[i] : 0;
+	}
+}
 
 
 int main(){
 	srand(time(NULL));
 	matrix* mat = matrix_random_normal(ROWS, COLS, 0., 1.);
-	matrix* mat2 = matrix_alloc(ROWS, COLS);
-	matrix* mat3 = matrix_alloc(ROWS, COLS);
-	matrix* mat4 = matrix_alloc(ROWS, COLS);
-	matrix* mat5 = matrix_alloc(ROWS, COLS);
-	matrix_arithmetic(mat, mat2, mat3, ADD);
-	matrix_arithmetic(mat2, mat3, mat4, MUL);
-	matrix_arithmetic(mat4, mat3, mat5, DIV);
-
-	matrix_print(mat5->previous[0]->previous[0]);
-	matrix_print(mat5->previous[0]->previous[1]);
+	// matrix* mat2 = matrix_alloc(ROWS, COLS);
+	// matrix* mat3 = matrix_alloc(ROWS, COLS);
+	// matrix* mat4 = matrix_alloc(ROWS, COLS);
+	// matrix* mat5 = matrix_alloc(ROWS, COLS);
+	TIMER(matrix_arithmetic(mat, mat, mat, DIV));
+	matrix_print(mat);
 
 
+
+
+
+
+
+	// matrix_free(mat);
+	// matrix_free(mat2);
+	// matrix_free(mat3);
+	// matrix_free(mat4);
+	// matrix_free(mat5);
 	return 0;
 }

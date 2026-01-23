@@ -6,22 +6,6 @@
 #include "matrix_math.h"
 
 
-char* get_optype_string(OPTYPE op){
-	switch (op) {
-		case ADD: 
-			return "add";
-		case SUB: 
-			return "sub";
-		case MUL: 
-			return "mul";
-		case DIV: 
-			return "div";
-		case NONE: 
-			return "none";
-		default:
-			"none";
-	}
-}
 
 
 matrix* matrix_alloc(int ROWS, int COLS){
@@ -321,12 +305,20 @@ matrix* matrix_copy(const matrix* input){
 }
 
 
-void matrix_map(matrix *m, double (*function)(double)){
-	if(MATRIX_NULL(m)){
+void matrix_map(matrix* inp1, matrix* out, OPTYPE operation){
+	if(MATRIX_NULL(inp1) || MATRIX_NULL(out)){
 		MATRIX_ERROR("NULL matrix argument(s) in matrix_map()\n");
 	}
-	for(size_t i = 0; i < m->size; i++)
-		m->data[i] = function(m->data[i]);
+	if((inp1->rows != out->rows) || (inp1->cols != out->cols)){
+		MATRIX_ERROR("Invalid input matrix shapes in matrix_map()\n");
+	}
+	unary_op function  = get_unary_operation(operation);
+	for(size_t i = 0; i < inp1->size; i++)
+		out->data[i] = function(inp1->data[i]);
+	matrix_grad_on(out);
+	out->op = operation;
+	out->num_prevs = 1;
+	out->previous[0] = inp1; 
 } 
 
 void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation){
@@ -336,28 +328,9 @@ void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation
 	if((inp1->rows != inp2->rows) || (inp1->cols != inp2->cols)){
 		MATRIX_ERROR("Invalid input matrix shapes in matrix_arithmetic()\n");
 	}
-	double (*function)(double x, double y);
-	switch (operation) {
-		case(ADD):
-			function = matrix_add;
-			break;
-		case(MUL):
-			function = matrix_mul;
-			break;
-		case(SUB):
-			function = matrix_sub;
-			break;
-		case(DIV):
-			function = matrix_div;
-			break;
-		case(NONE):
-			perror("None is not a valid operation in matrix_arithmetic()\n");
-			exit(EXIT_FAILURE);
-	}
-
+	binary_op function = get_binary_operation(operation);
 	for(size_t i = 0; i < inp1->size; i++)
 		out->data[i] = function(inp1->data[i], inp2->data[i]);
-
 	matrix_grad_on(out);
 	out->op = operation;
 	out->num_prevs = 2;
@@ -493,6 +466,5 @@ void matrix_push_back(matrix* mat, double* array){
 	mat->size = mat->rows*mat->cols;
 }
 
-
-
+matrix* matrix_from_arrays(double** arrays, int num_rows, int num_cols);
 

@@ -6,26 +6,49 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define PI 3.1415926545897932	
 #define SQRT2 1.414213562373	// archimedes' constant
 #define LN2 0.69314718056	// natural log of 2
 #define EPSILON (double)1e-9	// used for error margins in math + log calculations
-								//
+
+typedef double (*unary_op)(double);
+typedef double (*binary_op)(double, double);
+
+
 typedef enum {
 	NONE,
+
+	//	binary ops
 	ADD, 
 	SUB,
 	MUL,
 	DIV,
-	// SQUARE,
-	// CUBE,
 	// MATMUL,
+	
+
+	//	unary ops
+	SQUARE,
+	CUBE,
+	RELU,
+	SIGMOID,
+	SIN,
+	COS,
+	TAN,
+	ARCSIN,
+	ARCCOS,
+	ARCTAN,
+	SINH,
+	COSH,
+	TANH,
+	LOG, 
+	EXP,
+
+	// TODO
 	// MEAN,
-	// RELU,
-	// SIGMOID,
 } OPTYPE;
-char* get_optype_string(OPTYPE op);
+
 
 
 /*********************************************
@@ -66,6 +89,12 @@ static inline double matrix_relu(double x){
 
 static inline double matrix_tanh(double x){
 	return tanh(x);
+}
+static inline double matrix_sinh(double x){
+	return sinh(x);
+}
+static inline double matrix_cosh(double x){
+	return cosh(x);
 }
 
 
@@ -150,18 +179,6 @@ static inline double matrix_dtan(double x){
 }
 
 
-// static inline double matrix_arcsin(double x){
-// 	return asin(x);
-// }
-//
-// static inline double matrix_arccos(double x){
-// 	return acos(x);
-// }
-//
-// static inline double matrix_arctan(double x){
-// 	return atan(x);
-// }
-
 
 /*
  *	RANDOM NUMBERS AND PROBABILITY DISTRIBUTIONS
@@ -208,10 +225,183 @@ static inline double matrix_squared_error(double x, double y){
 
 
 
+static inline unary_op get_unary_operation(OPTYPE operation){
+	unary_op function;
+	switch (operation) {
+		case(SQUARE):
+			return matrix_square;
+		case(CUBE):
+			return  matrix_cube;
+		case(RELU):
+			return  matrix_relu;
+		case(SIGMOID):
+			return matrix_sigmoid;
+		case(LOG):
+			return matrix_log;
+		case(EXP):
+			return matrix_exp;
+		case(SIN):
+			return matrix_sin;
+		case(COS):
+			return matrix_cos;
+		case(TAN):
+			return matrix_tan;
+		case(ARCSIN):
+			return matrix_arcsin;
+		case(ARCCOS):
+			return matrix_arccos;
+		case(ARCTAN):
+			return matrix_arctan;
+		case(SINH):
+			return matrix_sinh;
+		case(COSH):
+			return matrix_cosh;
+		case(TANH):
+			return matrix_tanh;
+		case(NONE):
+			perror("None is not a valid operation in get_unary_operation()\n");
+			exit(EXIT_FAILURE);
+		case(ADD):
+			perror("ADD is not a valid operation in get_unary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+		case(MUL):
+			perror("MUL is not a valid operation in get_unary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+		case(SUB):
+			perror("SUB is not a valid operation in get_unary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+		case(DIV):
+			perror("DIV is not a valid operation in get_unary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+	}
+	return function;
+}
+
+static inline binary_op get_binary_operation(OPTYPE operation){
+	binary_op function;
+	switch (operation) {
+		case(ADD):
+			return matrix_add;
+		case(MUL):
+			return matrix_mul;
+		case(SUB):
+			return matrix_sub;
+		case(DIV):
+			return matrix_div;
+		case(SQUARE):
+			perror("SQUARE is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(CUBE):
+			perror("CUBE is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(RELU):
+			perror("RELU is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(SIGMOID):
+			perror("SIGMOID is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(LOG):
+			perror("LOG is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(EXP):
+			perror("EXP is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(SIN):
+			perror("SIN is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(COS):
+			perror("COS is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(TAN):
+			perror("TAN is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(ARCSIN):
+			perror("ARCSIN is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(ARCCOS):
+			perror("ARCCOS is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(ARCTAN):
+			perror("ARCTAN is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(SINH):
+			perror("SINH is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(COSH):
+			perror("COSH is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(TANH):
+			perror("TANH is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+		case(NONE):
+			perror("NONE is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+			exit(EXIT_FAILURE);
+			break;
+	}
+	return function;
+}
 
 
-
-
+static inline char* get_optype_string(OPTYPE op){
+	switch (op) {
+		case ADD: 
+			return "add";
+		case SUB: 
+			return "sub";
+		case MUL: 
+			return "mul";
+		case DIV: 
+			return "div";
+		case SQUARE: 
+			return "square";
+		case CUBE: 
+			return "cube";
+		case RELU: 
+			return "relu";
+		case SIGMOID: 
+			return "sigmoid";
+		case NONE: 
+			return "none";
+		case SIN:
+			return "sin";
+		case COS:
+			return "sin";
+		case TAN:
+			return "tan";
+		case ARCSIN:
+			return "arcsin";
+		case ARCCOS:
+			return "arccos";
+		case ARCTAN:
+			return "arctan";
+		case SINH:
+			return "sinh";
+		case COSH:
+			return "cosh";
+		case TANH: 
+			return "tanh";
+		case LOG: 
+			return "log";
+		case EXP: 
+			return "exp";
+	}
+	return NULL;
+}
 
 #endif // !matrix_INCLUDE_FUNCTIONAL_H
 

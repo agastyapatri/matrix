@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "matrix_math.h"
 
 #ifndef MAX_PREVS
@@ -19,6 +20,12 @@
 #ifndef MAX_PARAM_MATRICES
 #define MAX_PARAM_MATRICES 10
 #endif
+
+#define TIMER(function) clock_t start = clock();\
+						function;				\
+						clock_t end = clock();  \
+						printf("%lf\n", (double)(end - start)/CLOCKS_PER_SEC);
+
 
 
 typedef struct matrix{
@@ -85,7 +92,8 @@ matrix* matrix_reshape(matrix* m, size_t ROWS, size_t COLS);
 void matrix_scale(matrix* a, double b);
 void matrix_hadamard(matrix* a, matrix* b, matrix* c);
 bool matrix_equality(matrix* a, matrix* b);
-void matrix_map(matrix* m, double (*function)(double x));
+// void matrix_map(matrix* m, double (*function)(double x));
+void matrix_map(matrix* inp1, matrix* out, OPTYPE operation);
 void matmul(matrix* a, matrix* b, matrix* c);
 
 void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation);
@@ -114,12 +122,6 @@ void matrix_push_back(matrix* mat, double* array);
 
 
 //TODO 
-matrix* matrix_from_arrays(double** arrays);
-
-
-
-
-
-
+matrix* matrix_from_arrays(double** arrays, int num_rows, int num_cols);
 
 #endif // !MATRIX_MATRIX_H
