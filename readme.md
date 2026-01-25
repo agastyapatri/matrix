@@ -62,3 +62,11 @@ ar rcs libmatrix.a matrix.o
 rm matrix.o
 ```
 Do not forget to add `-Ipath/to/matrix.h` in your project LSP settings.
+
+
+
+
+
+
+
+

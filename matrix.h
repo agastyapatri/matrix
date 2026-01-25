@@ -11,22 +11,24 @@
 #define MAX_PREVS 3 
 #endif
 
-
 #ifndef MAX_ARGS
 #define MAX_ARGS 5 
 #endif
-
 
 #ifndef MAX_PARAM_MATRICES
 #define MAX_PARAM_MATRICES 10
 #endif
 
+#ifndef BLOCK_SIZE
+#define BLOCK_SIZE 64
+#endif
+
 #define TIMER(function) clock_t start = clock();\
 						function;				\
 						clock_t end = clock();  \
-						printf("%lf\n", (double)(end - start)/CLOCKS_PER_SEC);
+						printf("%0.10f\n", (double)(end - start)/CLOCKS_PER_SEC);
 
-
+#define MATRIX_NULL(m) ((m==NULL) || (m->data==NULL)) ? 1 : 0
 
 typedef struct matrix{
 	//	core metadata
@@ -46,9 +48,9 @@ typedef struct matrix{
 } matrix;
 
 
-static inline bool MATRIX_NULL(const matrix* m){
-	return ((m==NULL)||(m->data==NULL));
-}
+// static inline bool MATRIX_NULL(const matrix* m){
+// 	return ((m==NULL)||(m->data==NULL));
+// }
 static inline size_t offset(const matrix* m, int i, int j){
 	return (i*m->cols + j);
 }
@@ -79,6 +81,7 @@ void matrix_grad_off(matrix* m);
 
 matrix* matrix_alloc(int ROWS, int COLS);
 matrix* matrix_ones(int ROWS, int COLS);
+matrix* matrix_eye(int SIDE);
 matrix* matrix_linspace(double start, double end, size_t num);
 matrix* matrix_arange(double start, double end, double step);
 void matrix_print(matrix* m);
@@ -88,13 +91,12 @@ matrix* matrix_copy(const matrix* input);
 matrix* matrix_reshape(matrix* m, size_t ROWS, size_t COLS);
 
 
-//	Elementwise addition for two matrix_scale
 void matrix_scale(matrix* a, double b);
 void matrix_hadamard(matrix* a, matrix* b, matrix* c);
 bool matrix_equality(matrix* a, matrix* b);
-// void matrix_map(matrix* m, double (*function)(double x));
+bool matrix_shape_equality(matrix* a, matrix* b);
 void matrix_map(matrix* inp1, matrix* out, OPTYPE operation);
-void matmul(matrix* a, matrix* b, matrix* c);
+void matmul(matrix* inp1, matrix* inp2, matrix* out);
 
 void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation);
 //	Replaces the elements of an existing matrix with random elements between -1 and 1
@@ -123,5 +125,6 @@ void matrix_push_back(matrix* mat, double* array);
 
 //TODO 
 matrix* matrix_from_arrays(double** arrays, int num_rows, int num_cols);
+
 
 #endif // !MATRIX_MATRIX_H

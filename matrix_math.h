@@ -31,8 +31,6 @@ typedef enum {
 	//	unary ops
 	SQUARE,
 	CUBE,
-	RELU,
-	SIGMOID,
 	SIN,
 	COS,
 	TAN,
@@ -79,13 +77,13 @@ static inline double matrix_cube(double x){
 	return x*x*x;
 }
 
-static inline double matrix_sigmoid(double x){
-	return 1.0 / (1 + exp(-x));
-}
+// static inline double matrix_sigmoid(double x){
+// 	return 1.0 / (1 + exp(-x));
+// }
 
-static inline double matrix_relu(double x){
-	return (x > 0) ? x : 0.0;
-}
+// static inline double matrix_relu(double x){
+// 	return (x > 0) ? x : 0.0;
+// }
 
 static inline double matrix_tanh(double x){
 	return tanh(x);
@@ -135,14 +133,6 @@ static inline double matrix_log(double x){
 /*********************************************
  *	DERIVATIVES 
  *********************************************/ 
-static inline double matrix_dsigmoid(double x){
-	return matrix_sigmoid(x)*(1 - matrix_sigmoid(x));
-}
-
-
-static inline double matrix_drelu(double x){
-	return (x > 0) ? 1.0 : 0.0;
-}
 
 static inline double matrix_dtanh(double x){
 	return 1 - matrix_square(matrix_tanh(x));
@@ -232,10 +222,6 @@ static inline unary_op get_unary_operation(OPTYPE operation){
 			return matrix_square;
 		case(CUBE):
 			return  matrix_cube;
-		case(RELU):
-			return  matrix_relu;
-		case(SIGMOID):
-			return matrix_sigmoid;
 		case(LOG):
 			return matrix_log;
 		case(EXP):
@@ -296,14 +282,14 @@ static inline binary_op get_binary_operation(OPTYPE operation){
 			perror("CUBE is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
 			exit(EXIT_FAILURE);
 			break;
-		case(RELU):
-			perror("RELU is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
-			exit(EXIT_FAILURE);
-			break;
-		case(SIGMOID):
-			perror("SIGMOID is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
-			exit(EXIT_FAILURE);
-			break;
+		// case(RELU):
+		// 	perror("RELU is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+		// 	exit(EXIT_FAILURE);
+		// 	break;
+		// case(SIGMOID):
+		// 	perror("SIGMOID is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
+		// 	exit(EXIT_FAILURE);
+		// 	break;
 		case(LOG):
 			perror("LOG is not a valid operation in get_binary_operation(); ensure that the desired op is unary\n");
 			exit(EXIT_FAILURE);
@@ -371,10 +357,10 @@ static inline char* get_optype_string(OPTYPE op){
 			return "square";
 		case CUBE: 
 			return "cube";
-		case RELU: 
-			return "relu";
-		case SIGMOID: 
-			return "sigmoid";
+		// case RELU: 
+		// 	return "relu";
+		// case SIGMOID: 
+		// 	return "sigmoid";
 		case NONE: 
 			return "none";
 		case SIN:

@@ -44,8 +44,20 @@ matrix* matrix_ones(int ROWS, int COLS){
 		m->data[i] = 1;
 	}
 	return m;
-
 }
+
+matrix* matrix_eye(int SIDE){
+	matrix* m = matrix_alloc(SIDE, SIDE);
+	for(size_t i = 0; i < m->rows; i++){
+		for(size_t j = 0; j < m->cols; j++){
+			m->data[offset(m, i, j)] = (i == j ) ? 1 : 0;
+		} 
+	}
+	return m;
+}
+
+
+
 void matrix_print_shape(matrix* m){
 	printf("(%li, %li)\n", m->rows, m->cols);
 }
@@ -85,27 +97,29 @@ void matrix_print(matrix *m){
 }
 
 
-void matmul(matrix* a, matrix* b, matrix* c){
-	if(MATRIX_NULL(a) || MATRIX_NULL(b) || !c){
-		MATRIX_ERROR("ERROR: matrix argument in matmul() is NULL\n");
-	}
-	if(a->cols != b->rows){
-		MATRIX_ERROR("ERROR: invalid input matrix dimensions in matmul()\n");
-	}
-	if ((c->rows != a->rows) || (c->cols != b->cols)){
-		MATRIX_ERROR("ERROR: invalid output matrix dimensions in matmul()\n");
-	} 
-	double _dot;
-	for(size_t i = 0; i < a->rows; i++){
-		for(size_t j = 0; j < b->cols; j++){
-			_dot = 0;
-			for(size_t k = 0; k < a->cols; k++){
-				_dot += a->data[i*a->cols + k]*b->data[k*b->cols + j];
-			}
-			set(c, _dot, i, j);
+void matmul(matrix* inp1, matrix* inp2, matrix* out){
+	for(size_t bi = 0; bi < inp1->rows; bi+=BLOCK_SIZE){
+		for(size_t bk = 0; bk < inp1->cols; bk+=BLOCK_SIZE){
+			for(size_t bj = 0; bj < inp2->cols; bj+=BLOCK_SIZE){
+
+				for(size_t i = bi; (i < inp1->rows) && (i < bi + BLOCK_SIZE); i++){
+					for(size_t k = bk; (k < inp1->cols) && (k < bk + BLOCK_SIZE); k++){
+						double r = inp1->data[offset(inp1, i, k)];
+						for(size_t j = bj; (j < inp2->cols) && (j < bj + BLOCK_SIZE); j++){
+							out->data[offset(out, i, j)] += r*inp2->data[offset(inp2, k, j)];
+						}
+					} 
+				}
+
+
+			} 
 		} 
 	}
 }
+
+
+
+
 
 matrix* matrix_transpose(matrix* m){
 	if(MATRIX_NULL(m))
@@ -135,64 +149,15 @@ matrix* matrix_reshape(matrix* m, size_t ROWS, size_t COLS){
 	return out;
 }
 
-
-// void matrix_add(matrix* a, matrix* b, matrix* c){
-// 	if(MATRIX_NULL(a) || MATRIX_NULL(b) || !c){
-// 		MATRIX_ERROR("ERROR: matrix argument(s) in add_matrix() is NULL\n");
-// 	}
-// 	if(a->cols != b->cols || a->rows != b->rows){
-// 		MATRIX_ERROR("ERROR: invalid input matrix dimensions in add_matrix()\n");
-// 	}
-// 	if ((c->rows != a->rows)  || (c->cols != a->cols)){
-// 		MATRIX_ERROR("ERROR: invalid output matrix dimensions in add_matrix()\n");
-// 	} 
-// 	for(size_t i = 0; i < a->rows; i++){
-// 		for(size_t j = 0; j < b->cols; j++){
-// 			c->data[i*c->cols + j] = a->data[i*a->cols + j] + b->data[i*a->cols + j] ;
-// 			// set(c, (get(a, i, j) + get(b, i, j)), i, j);
-// 		} 
-// 	}
-// }
-
 void matrix_scale(matrix* a, double b){
-	if(MATRIX_NULL(a)){
-		MATRIX_ERROR("ERROR: matrix argument(s) in matrix_scale() is NULL\n");
-	}
 	for(size_t i = 0; i < a->size; i++){
 		a->data[i] = b*a->data[i];
 	}
 } 
 
-// void matrix_sub(matrix* a, matrix* b, matrix* c){
-// 	if(MATRIX_NULL(a) || MATRIX_NULL(b) || !c){
-// 		MATRIX_ERROR("ERROR: matrix argument(s) in sub_matrix() is NULL\n");
-// 	}
-// 	if(a->cols != b->cols || a->rows != b->rows){
-// 		MATRIX_ERROR("ERROR: invalid input matrix dimensions in sub_matrix()\n");
-// 	}
-// 	if ((c->rows != a->rows)  || (c->cols != a->cols)){
-// 		MATRIX_ERROR("ERROR: invalid output matrix dimensions in sub_matrix()\n");
-// 	} 
-// 	for(size_t i = 0; i < a->rows; i++){
-// 		for(size_t j = 0; j < b->cols; j++){
-// 			c->data[i*c->cols + j] = a->data[i*a->cols + j] - b->data[i*a->cols + j] ;
-// 			// set(c, (get(a, i, j) + get(b, i, j)), i, j);
-// 		} 
-// 	}
-// }
-
 
 
 void matrix_hadamard(matrix* a, matrix* b, matrix* c){
-	if(MATRIX_NULL(a) || MATRIX_NULL(b) || !c){
-		MATRIX_ERROR("ERROR: matrix argument(s) in mul_elemwise_matrix() is NULL\n");
-	}
-	if(a->cols != b->cols || a->rows != b->rows){
-		MATRIX_ERROR("ERROR: invalid input matrix dimensions in mul_elemwise_matrix()\n");
-	}
-	if ((c->rows != a->rows)  || (c->cols != a->cols)){
-		MATRIX_ERROR("ERROR: invalid output matrix dimensions in mul_elemwise_matrix()\n");
-	} 
 	for(size_t i = 0; i < a->rows; i++){
 		for(size_t j = 0; j < b->cols; j++){
 			c->data[i*c->cols + j] = a->data[i*a->cols + j] * b->data[i*a->cols + j] ;
@@ -201,15 +166,12 @@ void matrix_hadamard(matrix* a, matrix* b, matrix* c){
 }
 
 bool matrix_equality(matrix* a, matrix* b){
-	if(MATRIX_NULL(a) || MATRIX_NULL(b)){
-		MATRIX_ERROR("ERROR: matrix argument(s) in matrix_equality() is NULL\n");
-	}
 	if(a->cols != b->cols || a->rows != b->rows){
 		return false;
 	}
 	for(size_t i = 0; i < a->rows; i++){
 		for(size_t j = 0; j < a->cols; j++){
-			if(!(a->data[i*a->cols + j] == b->data[i*b->cols + j])){
+			if(a->data[i*a->cols + j] != b->data[i*b->cols + j]){
 				return false;
 			}
 		} 
@@ -218,11 +180,14 @@ bool matrix_equality(matrix* a, matrix* b){
 
 }
 
+bool matrix_shape_equality(matrix* a, matrix* b){
+	if(a->cols != b->cols || a->rows != b->rows){
+		return false;
+	}
+	return true;
+}
 
 void matrix_randomize(matrix* m, double (*function)(double mu, double sigma)){
-	if(MATRIX_NULL(m)){
-		MATRIX_ERROR("NULL argument passed to matrix_randomize()\n");
-	}
 	for(size_t i = 0; i < m->size; i++){
 		m->data[i] = function(0, 1);
 	}
