@@ -14,6 +14,9 @@
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 64
 #endif
+#ifndef ALIGNMENT
+#define ALIGNMENT 32
+#endif
 
 #define TIMER(function) clock_t start = clock();\
 						function;				\
@@ -67,6 +70,7 @@ void matrix_grad_off(matrix* m);
 
 
 matrix* matrix_alloc(int ROWS, int COLS);
+matrix* matrix_aligned_alloc(int ROWS, int COLS, bool requires_grad);
 matrix* matrix_ones(int ROWS, int COLS);
 matrix* matrix_eye(int SIDE);
 matrix* matrix_linspace(double start, double end, size_t num);

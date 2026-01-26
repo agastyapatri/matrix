@@ -16,6 +16,7 @@ matrix* matrix_alloc(int ROWS, int COLS){
 	m->ref_count = (int*)calloc(1, sizeof(int));
 	(*(m->ref_count))++;
 	m->data = (double*)calloc(m->size, sizeof(double));
+	// m->data = (double*)aligned_alloc()
 
 	m->requires_grad = 0; 
 	m->grad = NULL;
@@ -23,6 +24,34 @@ matrix* matrix_alloc(int ROWS, int COLS){
 	m->num_prevs = 0;
 	return m;
 }
+
+
+matrix* matrix_aligned_alloc(int ROWS, int COLS, bool requires_grad){
+	matrix* m = malloc(sizeof(matrix));
+	if(MATRIX_NULL(m)) 
+		return NULL; 
+	m->rows = ROWS;
+	m->cols = COLS;
+	m->size = ROWS*COLS;
+	m->requires_grad = requires_grad;
+	m->ref_count = (int*)malloc(sizeof(size_t));
+	*(m->ref_count) = 1;
+	size_t bytes = sizeof(double)*m->size;
+	bytes += ALIGNMENT - (bytes % ALIGNMENT);
+	m->data = (double*)aligned_alloc(ALIGNMENT, bytes);
+	if(m->requires_grad){
+		m->grad =(double*)aligned_alloc(ALIGNMENT, bytes); 
+		for(size_t i = 0; i < m->size; i++){
+			m->grad[i] = 0.0;
+		}
+	}
+	else{
+		m->grad = NULL;
+	}
+	return m;
+}
+
+
 
 void matrix_grad_on(matrix* m){
 	m->requires_grad = 1; 
