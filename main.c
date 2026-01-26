@@ -1,9 +1,10 @@
 #include "matrix.h"
 #include "matrix_math.h"
+#include <stdlib.h>
 #include <time.h>
 #include <immintrin.h>
-#define ROWS 2000
-#define COLS 2000
+#define ROWS 1024 
+#define COLS 1024 
 #define MU 0.0
 #define SIGMA 1
 
@@ -37,32 +38,67 @@ void simd_matmul(matrix* inp1, matrix* inp2, matrix* out){
 
 
 
+void add_vec_simd(double* a, double* b, double* res, size_t len, int block_size){
+	for(size_t i = 0; i <= len-block_size; i+=block_size){
+		__m256d va = _mm256_loadu_pd(&a[i]);
+		__m256d vb = _mm256_loadu_pd(&b[i]);
+		__m256d vr = _mm256_add_pd(va, vb);
+		_mm256_storeu_pd(&res[i], vr);
+	}
+}
+
+
+void add_vec(double* a, double* b, double* res, size_t len){
+	for(size_t i = 0; i < len; i++){
+		res[i] = a[i] + b[i];
+	}
+}
+
+
 int main(){
 	// srand(time(NULL));
 	srand(0);
-	matrix* mat = matrix_ones(ROWS, COLS);
-	matrix* mat2 = matrix_eye(ROWS);
-	matrix* out = matrix_alloc(mat->rows, mat2->cols);
-	TIMER(matmul(mat, mat2, out));
-	// TIMER(simd_matmul(mat, mat2, out));
-	// TIMER(matmul(mat, mat2, out));
-	printf("%d\n", matrix_equality(mat, out));
+	// matrix* a = matrix_random_uniform(1, 16, 0, 1);
+	// matrix* b = matrix_random_uniform(1, 16, 0, 1);
+	// matrix* a = matrix_ones(1, len);
+	// matrix* b = matrix_ones(1, len);
+	// matrix* res = matrix_alloc(1, len);
+	//
+	//
+	int alignment = 32;
+	int block_size = 64;
+	int len = 10*1024;
+	double* a = (double*)aligned_alloc(alignment, len);
+	double* b = (double*)aligned_alloc(alignment, len);
+	double* res = (double*)aligned_alloc(alignment, len);
+	for(int i = 0; i < len; i++){
+		a[i] = 1;
+		b[i] = 1;
+		res[1] = 0;
+	}
 
 
 
 
-	// TIMER(matrix_arithmetic(mat, mat, mat, MUL));
+
+
+
+	
+
+	// TIMER(add_vec(a, b, res, len));
+	TIMER(add_vec_simd(a, b, res, len, block_size));
 
 
 
 
+	// TIMER(add_vec(a, b , res, len));
 
 
 
-	// matrix_free(mat);
-	// matrix_free(mat2);
-	// matrix_free(mat3);
-	// matrix_free(mat4);
-	// matrix_free(mat5);
+
+	// for(; i < len; i++){
+	// 	res->data[i] = a->data[i] + b->data[i];
+	// } 
+
 	return 0;
 }

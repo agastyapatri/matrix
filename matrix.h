@@ -7,17 +7,9 @@
 #include <time.h>
 #include "matrix_math.h"
 
-#ifndef MAX_PREVS
 #define MAX_PREVS 3 
-#endif
-
-#ifndef MAX_ARGS
 #define MAX_ARGS 5 
-#endif
-
-#ifndef MAX_PARAM_MATRICES
 #define MAX_PARAM_MATRICES 10
-#endif
 
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 64
@@ -28,7 +20,9 @@
 						clock_t end = clock();  \
 						printf("%0.10f\n", (double)(end - start)/CLOCKS_PER_SEC);
 
-#define MATRIX_NULL(m) ((m==NULL) || (m->data==NULL)) ? 1 : 0
+#define MATRIX_NULL(m) (m==NULL) ? 1 : 0
+#define MATRIX_ERROR(msg) printf(msg);	\
+						  exit(EXIT_FAILURE);
 
 typedef struct matrix{
 	//	core metadata
@@ -48,15 +42,8 @@ typedef struct matrix{
 } matrix;
 
 
-// static inline bool MATRIX_NULL(const matrix* m){
-// 	return ((m==NULL)||(m->data==NULL));
-// }
 static inline size_t offset(const matrix* m, int i, int j){
 	return (i*m->cols + j);
-}
-static inline void MATRIX_ERROR(char* msg){
-	perror(msg);
-	exit(EXIT_FAILURE);
 }
 static inline double get(const matrix* m, int i, int j){
 	return m->data[offset(m, i, j)];
