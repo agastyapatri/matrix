@@ -8,46 +8,43 @@
 
 
 
+// matrix* matrix_alloc(int ROWS, int COLS){
+// 	matrix* m = calloc(1, sizeof(matrix));
+// 	m->cols = COLS; 
+// 	m->rows = ROWS; 
+// 	m->size = ROWS*COLS;
+// 	m->ref_count = (int*)calloc(1, sizeof(int));
+// 	(*(m->ref_count))++;
+// 	m->bytes = m->size*sizeof(double);
+// 	m->stride = COLS;
+// 	m->padding = 0;
+// 	m->data = (double*)calloc(m->size, sizeof(double));
+//
+// 	m->requires_grad = 0; 
+// 	m->grad = NULL;
+// 	m->op = NONE;
+// 	m->num_prevs = 0;
+// 	return m;
+// }
+
+
 matrix* matrix_alloc(int ROWS, int COLS){
-	matrix* m = calloc(1, sizeof(matrix));
-	m->cols = COLS; 
-	m->rows = ROWS; 
-	m->size = ROWS*COLS;
-	m->ref_count = (int*)calloc(1, sizeof(int));
-	(*(m->ref_count))++;
-	m->data = (double*)calloc(m->size, sizeof(double));
-	// m->data = (double*)aligned_alloc()
-
-	m->requires_grad = 0; 
-	m->grad = NULL;
-	m->op = NONE;
-	m->num_prevs = 0;
-	return m;
-}
-
-
-matrix* matrix_aligned_alloc(int ROWS, int COLS, bool requires_grad){
 	matrix* m = malloc(sizeof(matrix));
 	if(MATRIX_NULL(m)) 
 		return NULL; 
 	m->rows = ROWS;
 	m->cols = COLS;
 	m->size = ROWS*COLS;
-	m->requires_grad = requires_grad;
+	m->requires_grad = false;
+	m->grad = NULL;
+	m->op = NONE;
+	m->num_prevs = 0;
 	m->ref_count = (int*)malloc(sizeof(size_t));
 	*(m->ref_count) = 1;
-	size_t bytes = sizeof(double)*m->size;
-	bytes += ALIGNMENT - (bytes % ALIGNMENT);
-	m->data = (double*)aligned_alloc(ALIGNMENT, bytes);
-	if(m->requires_grad){
-		m->grad =(double*)aligned_alloc(ALIGNMENT, bytes); 
-		for(size_t i = 0; i < m->size; i++){
-			m->grad[i] = 0.0;
-		}
-	}
-	else{
-		m->grad = NULL;
-	}
+	m->bytes = sizeof(double)*m->size;
+	m->bytes += ALIGNMENT - (m->bytes % ALIGNMENT);
+	m->padding = m->bytes - sizeof(double)*m->size;
+	m->data = (double*)aligned_alloc(ALIGNMENT, m->bytes);
 	return m;
 }
 
@@ -55,16 +52,21 @@ matrix* matrix_aligned_alloc(int ROWS, int COLS, bool requires_grad){
 
 void matrix_grad_on(matrix* m){
 	m->requires_grad = 1; 
-	m->grad = (double*)calloc(m->size, sizeof(double)); 
+	// m->grad = (double*)calloc(m->size, sizeof(double));
+	size_t bytes = sizeof(double)*m->size;
+	bytes += ALIGNMENT - (bytes % ALIGNMENT);
+	m->grad = (double*)aligned_alloc(ALIGNMENT, bytes);
+	for(size_t i = 0; i < m->size; i++)
+		m->grad[i] = 0.0;
 }
 
 void matrix_grad_off(matrix* m){
 	m->requires_grad = 0; 
 	m->op = NONE;
-	free(m->grad);
-	m->grad = NULL;
+	if(m->grad){
+		free(m->grad);
+	}
 }
-
 
 
 matrix* matrix_ones(int ROWS, int COLS){
@@ -102,6 +104,9 @@ void matrix_free(matrix* m){
 	if(*(m->ref_count) == 0){
 		free(m->ref_count);
 		free(m->data);
+		if(!m->requires_grad){
+			free(m->grad);
+		}
 	}
 	free(m);
 }
@@ -139,8 +144,6 @@ void matmul(matrix* inp1, matrix* inp2, matrix* out){
 						}
 					} 
 				}
-
-
 			} 
 		} 
 	}
@@ -151,14 +154,14 @@ void matmul(matrix* inp1, matrix* inp2, matrix* out){
 
 
 matrix* matrix_transpose(matrix* m){
-	if(MATRIX_NULL(m))
-		MATRIX_ERROR("NULL argument passed to matrix_transpose()\n");
 	matrix* out = (matrix*)malloc(sizeof(matrix));
 	out->rows = m->cols;
 	out->cols = m->rows;
 	out->size = m->size;
 	out->data = m->data;
 	out->ref_count = m->ref_count;
+	out->requires_grad = m->requires_grad;
+	out->grad = m->grad;
 	(*(m->ref_count))++;
 	return out;
 }
@@ -174,6 +177,8 @@ matrix* matrix_reshape(matrix* m, size_t ROWS, size_t COLS){
 	out->size = m->size;
 	out->data = m->data;
 	out->ref_count = m->ref_count;
+	out->requires_grad = m->requires_grad;
+	out->grad = m->grad;
 	(*(m->ref_count))++;
 	return out;
 }
@@ -195,7 +200,7 @@ void matrix_hadamard(matrix* a, matrix* b, matrix* c){
 }
 
 bool matrix_equality(matrix* a, matrix* b){
-	if(a->cols != b->cols || a->rows != b->rows){
+	if(!(matrix_shape_equality(a, b))){
 		return false;
 	}
 	for(size_t i = 0; i < a->rows; i++){
@@ -207,13 +212,6 @@ bool matrix_equality(matrix* a, matrix* b){
 	}
 	return true;
 
-}
-
-bool matrix_shape_equality(matrix* a, matrix* b){
-	if(a->cols != b->cols || a->rows != b->rows){
-		return false;
-	}
-	return true;
 }
 
 void matrix_randomize(matrix* m, double (*function)(double mu, double sigma)){
@@ -295,11 +293,14 @@ matrix* matrix_copy(const matrix* input){
 	for(size_t i = 0; i < output->size; i++){
 		output->data[i] = input->data[i];
 	}
+	if(input->requires_grad){
+		matrix_grad_on(output);
+	}
 	return output;
 }
 
 
-void matrix_map(matrix* inp1, matrix* out, OPTYPE operation){
+void matrix_unary_op(matrix* inp1, matrix* out, OPTYPE operation){
 	if(MATRIX_NULL(inp1) || MATRIX_NULL(out)){
 		MATRIX_ERROR("NULL matrix argument(s) in matrix_map()\n");
 	}
@@ -315,7 +316,7 @@ void matrix_map(matrix* inp1, matrix* out, OPTYPE operation){
 	out->previous[0] = inp1; 
 } 
 
-void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation){
+void matrix_binary_op(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation){
 	if(MATRIX_NULL(inp1) || MATRIX_NULL(inp2) || MATRIX_NULL(out)){
 		MATRIX_ERROR("NULL matrix argument(s) in matrix_arithmetic()\n");
 	}
@@ -334,42 +335,43 @@ void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation
 
 
 
-double matrix_max(const matrix* m){
+matrix* matrix_max(const matrix* m){
 	if(MATRIX_NULL(m) || *(m->ref_count) == 0){
 		MATRIX_ERROR("matrix passed to matrix_max() is NULL or already has been freed.\n");
 	}
-	double max = m->data[0];
+	matrix* max = matrix_alloc(1,1); 
+	max->data[0] = m->data[0];
 	for(size_t i = 1; i < m->size; i++){
-		if(max <= m->data[i]) 
-			max = m->data[i];
+		if(max->data[0] <= m->data[i]) 
+			max->data[0] = m->data[i];
 	}
 	return max;
 }
 
-double matrix_min(const matrix* m){
+matrix* matrix_min(const matrix* m){
 	if(MATRIX_NULL(m) || *(m->ref_count) == 0){
 		MATRIX_ERROR("matrix passed to matrix_max() is NULL or already has been freed.\n");
 	}
-	double max = m->data[0];
+	matrix* max = matrix_alloc(1,1); 
+	max->data[0] = m->data[0];
 	for(size_t i = 1; i < m->size; i++){
-		if(max > m->data[i]) 
-			max = m->data[i];
+		if(max->data[0] > m->data[i]) 
+			max->data[0] = m->data[i];
 	}
 	return max;
 }
 
-double matrix_mean(const matrix* m){
-	if(MATRIX_NULL(m) || *(m->ref_count) == 0){
-		MATRIX_ERROR("matrix passed to matrix_max() is NULL or already has been freed.\n");
-	}
-	double mean = 0;
+matrix* matrix_mean(const matrix* m){
+	matrix* mean = matrix_alloc(1, 1);
 	for(size_t i = 0; i < m->size; i++){
-		mean += m->data[i];
+		mean->data[0] += m->data[i];
 	}
-	return mean/m->size;
-
+	mean->data[0]  /= m->size;
+	return mean;
 }
-double matrix_std(const matrix* m){
+
+
+matrix* matrix_std(const matrix* m){
 	if(MATRIX_NULL(m) || *(m->ref_count) == 0){
 		MATRIX_ERROR("matrix passed to matrix_max() is NULL or already has been freed.\n");
 	}
@@ -378,22 +380,24 @@ double matrix_std(const matrix* m){
 		mu += m->data[i];
 	}
 	mu /= m->size;
-	double sigma = 0;
+	matrix* sigma = matrix_alloc(1,1);
 	for(size_t i = 0; i < m->size; i++){
-		sigma = (m->data[i] - mu) * (m->data[i] - mu);
+		sigma->data[0] = (m->data[i] - mu) * (m->data[i] - mu);
 	}
-	sigma /= m->size;
-	return sqrt(sigma);
+	sigma->data[0] /= m->size;
+	sigma->data[0] = sqrt(sigma->data[0]);
+	return sigma;
 }
 
-double matrix_sum(const matrix* m){
+matrix* matrix_sum(const matrix* m){
 	if(MATRIX_NULL(m) || *(m->ref_count) == 0){
-		MATRIX_ERROR("matrix passed to matrix_max() is NULL or already has been freed.\n");
+		MATRIX_ERROR("matrix passed to matrix_sum() is NULL or already has been freed.\n");
 	}
-	double sum = 0;
+	// double sum = 0;
+	matrix* sum = matrix_alloc(1, 1);
 	
 	for(size_t i = 0; i < m->size; i++)
-		sum += m->data[i];
+		sum->data[0] += m->data[i];
 	return sum;
 }
 
@@ -421,6 +425,7 @@ matrix* matrix_arange(double start, double end, double step){
 	return out;
 }
 
+// TODO
 double matrix_det(const matrix* m){
 	if(MATRIX_NULL(m))
 		MATRIX_ERROR("NULL matrix in matrix_determinant()\n");
@@ -430,6 +435,8 @@ double matrix_det(const matrix* m){
 	return 0;
 }
 
+
+//	TODO
 matrix* matrix_inverse(const matrix* m){
 	matrix* out = matrix_alloc(m->rows, m->cols);
 	if(m->rows == 2 && m->cols == 2){
@@ -451,6 +458,8 @@ double matrix_trace(const matrix* m){
 	return trace;
 }
 
+
+//	TODO: figure out how to account for memory alignment here
 void matrix_push_back(matrix* mat, double* array){
 	mat->rows++;
 	mat->data = realloc(mat->data, mat->rows*mat->cols*sizeof(double));
@@ -460,5 +469,13 @@ void matrix_push_back(matrix* mat, double* array){
 	mat->size = mat->rows*mat->cols;
 }
 
-matrix* matrix_from_arrays(double** arrays, int num_rows, int num_cols);
+// matrix* matrix_from_arrays(double** arrays, int num_rows, int num_cols){
+// 	matrix* m = matrix_alloc(num_rows, num_cols);
+// 	for(size_t i = 0; i < m->rows; i++){
+// 		for(size_t j = 0; j < m->cols; j++){
+// 			m->data[offset(m, i, j)] = arrays[i][j];
+// 		}
+// 	}
+// 	return m;
+// }
 

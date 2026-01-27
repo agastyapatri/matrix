@@ -15,7 +15,7 @@
 #define BLOCK_SIZE 64
 #endif
 #ifndef ALIGNMENT
-#define ALIGNMENT 32
+#define ALIGNMENT 64
 #endif
 
 #define TIMER(function) clock_t start = clock();\
@@ -33,6 +33,10 @@ typedef struct matrix{
 	size_t size;
 	int* ref_count;
 	double* data; 
+	size_t bytes;
+	int stride;
+	int padding;
+	
 
 
 	//	autograd metadata
@@ -57,20 +61,26 @@ static inline void set(matrix* m, double val, int i, int j){
 static inline bool is_square(const matrix* m){
 	return (m->rows == m->cols) ? 1 : 0;
 }
+static inline bool matrix_shape_equality(matrix* a, matrix* b){
+	if(a->cols != b->cols || a->rows != b->rows){
+		return false;
+	}
+	return true;
+}
 
 
 void matrix_print_shape(matrix* m);
-double matrix_max(const matrix* m);
-double matrix_min(const matrix* m);
-double matrix_mean(const matrix* m);
-double matrix_std(const matrix* m);
-double matrix_sum(const matrix* m);
+matrix* matrix_max(const matrix* m);
+matrix* matrix_min(const matrix* m);
+matrix* matrix_mean(const matrix* m);
+matrix* matrix_std(const matrix* m);
+matrix* matrix_sum(const matrix* m);
 void matrix_grad_on(matrix* m);
 void matrix_grad_off(matrix* m);
 
 
 matrix* matrix_alloc(int ROWS, int COLS);
-matrix* matrix_aligned_alloc(int ROWS, int COLS, bool requires_grad);
+// matrix* matrix_aligned_alloc(int ROWS, int COLS);
 matrix* matrix_ones(int ROWS, int COLS);
 matrix* matrix_eye(int SIDE);
 matrix* matrix_linspace(double start, double end, size_t num);
@@ -85,11 +95,12 @@ matrix* matrix_reshape(matrix* m, size_t ROWS, size_t COLS);
 void matrix_scale(matrix* a, double b);
 void matrix_hadamard(matrix* a, matrix* b, matrix* c);
 bool matrix_equality(matrix* a, matrix* b);
-bool matrix_shape_equality(matrix* a, matrix* b);
-void matrix_map(matrix* inp1, matrix* out, OPTYPE operation);
 void matmul(matrix* inp1, matrix* inp2, matrix* out);
 
-void matrix_arithmetic(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation);
+void matrix_unary_op(matrix* inp1, matrix* out, OPTYPE operation);
+void matrix_binary_op(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation);
+
+
 //	Replaces the elements of an existing matrix with random elements between -1 and 1
 void matrix_randomize(matrix* m, double (*function)(double, double));
 
@@ -116,6 +127,10 @@ void matrix_push_back(matrix* mat, double* array);
 
 //TODO 
 matrix* matrix_from_arrays(double** arrays, int num_rows, int num_cols);
+
+
+
+
 
 
 #endif // !MATRIX_MATRIX_H

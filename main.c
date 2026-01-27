@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <immintrin.h>
-#define INT 5
+#define INT 1
 #define ROWS INT*1024 
 #define COLS INT*1024 
 #define MU 0.0
@@ -37,16 +37,11 @@
 
 
 int main(){
-	matrix* m1 = matrix_aligned_alloc(ROWS, COLS, false);
-	matrix* m2 = matrix_aligned_alloc(COLS, ROWS, false);
-	matrix* out = matrix_aligned_alloc(ROWS, ROWS, false);
-	TIMER(matmul(m1, m2, out));
-	matrix_print_shape(out);
-	// printf("%li\n", m->size);
-	// k
-	// printf("%p\n", m->data);
+	double k = 1/(double)COLS;
+	// matrix* m = matrix_random_uniform(1, COLS, -sqrt(k), sqrt(k));
+	matrix* m = matrix_random_uniform(1, COLS, 0, 1);
 
 
 
-	return 0;
+
 }
