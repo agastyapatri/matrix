@@ -1,10 +1,10 @@
 import numpy as np 
 
 if __name__ == "__main__":
-    x = np.random.randn(1*1024, 1*1024)
-    # y = np.random.randn(5*1024, 5*1024)
+    x = np.random.randn(16, 784)
+    y = np.random.randn(784, 392)
     import timeit
     start = timeit.default_timer()
-    x = x*x
+    z = x@y
     end = timeit.default_timer()
     print(end - start)

@@ -37,10 +37,21 @@
 
 
 int main(){
-	double k = 1/(double)COLS;
-	// matrix* m = matrix_random_uniform(1, COLS, -sqrt(k), sqrt(k));
-	matrix* m = matrix_random_uniform(1, COLS, 0, 1);
+	matrix* m = matrix_alloc(16, 784);
+	matrix* n = matrix_alloc(784, 392);
+	matrix* o = matrix_alloc(392, 196);
+	matrix* p = matrix_alloc(196, 49);
+	matrix* q = matrix_alloc(49, 10);
 
+
+	TIMER(matmul(m, n, o));
+
+
+	matrix_free(m);
+	matrix_free(n);
+	matrix_free(o);
+	matrix_free(p);
+	matrix_free(q);
 
 
 
