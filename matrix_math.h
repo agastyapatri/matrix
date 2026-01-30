@@ -6,7 +6,7 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include "matrix.h"
 
 #define PI 3.1415926545897932	
 #define SQRT2 1.414213562373	// archimedes' constant
@@ -18,35 +18,6 @@ typedef double (*binary_op)(double, double);
 typedef double (*ternary_op)(double, double, double);
 
 
-typedef enum {
-	NONE,
-
-	//	binary ops
-	ADD, 
-	SUB,
-	MUL,
-	DIV,
-	MATMUL,
-	
-
-	//	unary ops
-	SQUARE,
-	CUBE,
-	SIN,
-	COS,
-	TAN,
-	ARCSIN,
-	ARCCOS,
-	ARCTAN,
-	SINH,
-	COSH,
-	TANH,
-	LOG, 
-	EXP,
-
-	// TODO
-	// MEAN,
-} OPTYPE;
 
 
 
@@ -54,21 +25,41 @@ typedef enum {
  *	FUNCTIONS
  *********************************************/ 
 
-static inline double matrix_add(double x, double y){
-	return x + y;
+static inline void MATRIX_ADD(matrix* inp1, matrix* inp2, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++)
+		out->data[i] = inp1->data[i] + inp2->data[i];
 }
 
-static inline double matrix_sub(double x, double y){
-	return x - y;
+static inline void MATRIX_SUB(matrix* inp1, matrix* inp2, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++)
+		out->data[i] = inp1->data[i] - inp2->data[i];
 }
 
-static inline double matrix_mul(double x, double y){
-	return x * y;
+static inline void MATRIX_MUL(matrix* inp1, matrix* inp2, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++)
+		out->data[i] = inp1->data[i] * inp2->data[i];
 }
 
-static inline double matrix_div(double x, double y){
-	return x / y;
+static inline void MATRIX_DIV(matrix* inp1, matrix* inp2, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++)
+		out->data[i] = inp1->data[i] / inp2->data[i];
 }
+
+
+// static inline double matrix_add(double x, double y){
+// 	return x + y;
+// }
+
+// static inline double matrix_sub(double x, double y){
+// 	return x - y;
+// }
+// static inline double matrix_mul(double x, double y){
+// 	return x * y;
+// }
+
+// static inline double matrix_div(double x, double y){
+// 	return x / y;
+// }
 
 static inline double matrix_square(double x){
 	return x*x;
@@ -216,136 +207,136 @@ static inline double matrix_squared_error(double x, double y){
 
 
 
-static inline unary_op get_unary_operation(OPTYPE operation){
-	switch (operation) {
-		case(SQUARE):
-			return matrix_square;
-		case(CUBE):
-			return  matrix_cube;
-		case(LOG):
-			return matrix_log;
-		case(EXP):
-			return matrix_exp;
-		case(SIN):
-			return matrix_sin;
-		case(COS):
-			return matrix_cos;
-		case(TAN):
-			return matrix_tan;
-		case(ARCSIN):
-			return matrix_arcsin;
-		case(ARCCOS):
-			return matrix_arccos;
-		case(ARCTAN):
-			return matrix_arctan;
-		case(SINH):
-			return matrix_sinh;
-		case(COSH):
-			return matrix_cosh;
-		case(TANH):
-			return matrix_tanh;
-		case(NONE):
-			return NULL; 
-		case(ADD):
-			return NULL; 
-		case(MUL):
-			return NULL; 
-		case(SUB):
-			return NULL;
-		case(DIV):
-			return NULL;
-		case(MATMUL):
-			return NULL;
-	}
-}
-
-static inline binary_op get_binary_operation(OPTYPE operation){
-	switch (operation) {
-		case(ADD):
-			return matrix_add;
-		case(MUL):
-			return matrix_mul;
-		case(SUB):
-			return matrix_sub;
-		case(DIV):
-			return matrix_div;
-		case(MATMUL):
-			return NULL;
-		case(SQUARE):
-			return NULL;
-		case(CUBE):
-			return NULL;
-		case(LOG):
-			return NULL;
-		case(EXP):
-			return NULL;
-		case(SIN):
-			return NULL;
-		case(COS):
-			return NULL;
-		case(TAN):
-			return NULL;
-		case(ARCSIN):
-			return NULL;
-		case(ARCCOS):
-			return NULL;
-		case(ARCTAN):
-			return NULL;
-		case(SINH):
-			return NULL;
-		case(COSH):
-			return NULL;
-		case(TANH):
-			return NULL;
-		case(NONE):
-			return NULL;
-	}
-}
-
-
-static inline char* get_optype_string(OPTYPE op){
-	switch (op) {
-		case ADD: 
-			return "add";
-		case SUB: 
-			return "sub";
-		case MUL: 
-			return "mul";
-		case DIV: 
-			return "div";
-		case SQUARE: 
-			return "square";
-		case CUBE: 
-			return "cube";
-		case NONE: 
-			return "none";
-		case SIN:
-			return "sin";
-		case COS:
-			return "sin";
-		case TAN:
-			return "tan";
-		case ARCSIN:
-			return "arcsin";
-		case ARCCOS:
-			return "arccos";
-		case ARCTAN:
-			return "arctan";
-		case SINH:
-			return "sinh";
-		case COSH:
-			return "cosh";
-		case TANH: 
-			return "tanh";
-		case LOG: 
-			return "log";
-		case EXP: 
-			return "exp";
-		case MATMUL: 
-			return "matmul";
-	}
-	return NULL;
-}
+// static inline unary_op get_unary_operation(OPTYPE operation){
+// 	switch (operation) {
+// 		case(SQUARE):
+// 			return matrix_square;
+// 		case(CUBE):
+// 			return  matrix_cube;
+// 		case(LOG):
+// 			return matrix_log;
+// 		case(EXP):
+// 			return matrix_exp;
+// 		case(SIN):
+// 			return matrix_sin;
+// 		case(COS):
+// 			return matrix_cos;
+// 		case(TAN):
+// 			return matrix_tan;
+// 		case(ARCSIN):
+// 			return matrix_arcsin;
+// 		case(ARCCOS):
+// 			return matrix_arccos;
+// 		case(ARCTAN):
+// 			return matrix_arctan;
+// 		case(SINH):
+// 			return matrix_sinh;
+// 		case(COSH):
+// 			return matrix_cosh;
+// 		case(TANH):
+// 			return matrix_tanh;
+// 		case(NONE):
+// 			return NULL; 
+// 		case(ADD):
+// 			return NULL; 
+// 		case(MUL):
+// 			return NULL; 
+// 		case(SUB):
+// 			return NULL;
+// 		case(DIV):
+// 			return NULL;
+// 		case(MATMUL):
+// 			return NULL;
+// 	}
+// }
+//
+// static inline binary_op get_binary_operation(OPTYPE operation){
+// 	switch (operation) {
+// 		case(ADD):
+// 			return matrix_add;
+// 		case(MUL):
+// 			return matrix_mul;
+// 		case(SUB):
+// 			return matrix_sub;
+// 		case(DIV):
+// 			return matrix_div;
+// 		case(MATMUL):
+// 			return NULL;
+// 		case(SQUARE):
+// 			return NULL;
+// 		case(CUBE):
+// 			return NULL;
+// 		case(LOG):
+// 			return NULL;
+// 		case(EXP):
+// 			return NULL;
+// 		case(SIN):
+// 			return NULL;
+// 		case(COS):
+// 			return NULL;
+// 		case(TAN):
+// 			return NULL;
+// 		case(ARCSIN):
+// 			return NULL;
+// 		case(ARCCOS):
+// 			return NULL;
+// 		case(ARCTAN):
+// 			return NULL;
+// 		case(SINH):
+// 			return NULL;
+// 		case(COSH):
+// 			return NULL;
+// 		case(TANH):
+// 			return NULL;
+// 		case(NONE):
+// 			return NULL;
+// 	}
+// }
+//
+//
+// static inline char* get_optype_string(OPTYPE op){
+// 	switch (op) {
+// 		case ADD: 
+// 			return "add";
+// 		case SUB: 
+// 			return "sub";
+// 		case MUL: 
+// 			return "mul";
+// 		case DIV: 
+// 			return "div";
+// 		case SQUARE: 
+// 			return "square";
+// 		case CUBE: 
+// 			return "cube";
+// 		case NONE: 
+// 			return "none";
+// 		case SIN:
+// 			return "sin";
+// 		case COS:
+// 			return "sin";
+// 		case TAN:
+// 			return "tan";
+// 		case ARCSIN:
+// 			return "arcsin";
+// 		case ARCCOS:
+// 			return "arccos";
+// 		case ARCTAN:
+// 			return "arctan";
+// 		case SINH:
+// 			return "sinh";
+// 		case COSH:
+// 			return "cosh";
+// 		case TANH: 
+// 			return "tanh";
+// 		case LOG: 
+// 			return "log";
+// 		case EXP: 
+// 			return "exp";
+// 		case MATMUL: 
+// 			return "matmul";
+// 	}
+// 	return NULL;
+// }
 
 #endif // !matrix_INCLUDE_FUNCTIONAL_H
 

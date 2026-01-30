@@ -113,15 +113,8 @@ matrix* matmul_alternate(matrix* inp1, matrix* inp2){
 }
 
 
-
-
-
 int main(){
-	matrix* m = matrix_random_normal(10, 5, 0, 1);
-	matrix* n = matrix_random_normal(10, 5, 0, 1);
-	matrix_grad_on(m);
-	matrix* out = matrix_sub_alternate(m, n);
-
-
-	matrix_print(out);
+	matrix* m = matrix_alloc(5, 5);
+	matrix_print(m);
+	return 0;
 }

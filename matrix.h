@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "matrix_math.h"
 
 #define MAX_PREVS 3 
 #define MAX_ARGS 5 
@@ -15,7 +14,7 @@
 #define BLOCK_SIZE 64
 #endif
 #ifndef ALIGNMENT
-#define ALIGNMENT 64
+#define ALIGNMENT 32
 #endif
 
 #define MATRIX_TIMER(function) clock_t start = clock();\
@@ -28,29 +27,67 @@
 						  exit(EXIT_FAILURE);
 
 
+
+// if(MATRIX_NULL(mat) || MATRIX_NULL(vec)){
+// 	MATRIX_ERROR("Invalid / NULL arguments to matrix_add_rowwise()\n");
+// }
+// if(vec->cols != mat->cols){
+// 	MATRIX_ERROR("Invalid matrix dimensions in matrix_add_rowwise(); number of columns are not equal\n");
+// }
 // #define MATRIX_MEMALOC(size) (size > 1024) ? aligned_alloc(ALIGNMENT, size) : malloc(size);
 
+typedef enum {
+	NONE,
+
+	//	binary ops
+	ADD, 
+	SUB,
+	MUL,
+	DIV,
+	MATMUL,
+
+
+	//	unary ops
+	SQUARE,
+	CUBE,
+	SIN,
+	COS,
+	TAN,
+	ARCSIN,
+	ARCCOS,
+	ARCTAN,
+	SINH,
+	COSH,
+	TANH,
+	LOG, 
+	EXP,
+
+	// TODO
+	// MEAN,
+} OPTYPE;
 
 
 typedef struct matrix{
-	//	core metadata
+	//	LOGICAL CORE
 	size_t rows, cols;
-	size_t size;
 	int* ref_count;
+	size_t num_els;
 	double* data; 
+
+	//	PHYSICAL METADATA FOR SIMD.
 	size_t bytes;
 	int stride;
+	size_t size;
 	int padding;
 	
 
 
-	//	autograd metadata
+	//	AUTOGRAD METADATA
 	bool requires_grad;
 	double* grad;
 	OPTYPE op;
 	struct matrix* previous[MAX_PREVS];
 	int num_prevs;
-
 } matrix;
 
 

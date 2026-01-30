@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdlib.h> 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include "matrix_math.h"
 // matrix* matrix_alloc(int ROWS, int COLS){
@@ -30,7 +31,6 @@ matrix* matrix_alloc(int ROWS, int COLS){
 		return NULL; 
 	m->rows = ROWS;
 	m->cols = COLS;
-	m->size = ROWS*COLS;
 	m->requires_grad = false;
 	m->grad = NULL;
 	m->op = NONE;
@@ -38,9 +38,12 @@ matrix* matrix_alloc(int ROWS, int COLS){
 	m->ref_count = (int*)malloc(sizeof(size_t));
 	*(m->ref_count) = 1;
 	m->bytes = sizeof(double)*m->size;
-	m->bytes += ALIGNMENT - (m->bytes % ALIGNMENT);
-	m->padding = m->bytes - sizeof(double)*m->size;
+	m->stride = (m->cols + (ALIGNMENT / sizeof(double)) - 1)  & ~((ALIGNMENT / sizeof(double)) - 1);
+	m->padding = m->stride - m->cols;
+	m->size = m->rows * m->stride;
+	m->bytes = m->size * sizeof(double);
 	m->data = (double*)aligned_alloc(ALIGNMENT, m->bytes);
+	memset(m->data, 0, m->bytes);
 	return m;
 }
 
@@ -110,7 +113,6 @@ void matrix_print(matrix *m){
 	if(MATRIX_NULL(m)){
 		MATRIX_ERROR("ERROR: argument in print_matrix() is NULL\n");
 	}
-	char* opstring = get_optype_string(m->op);
 	printf("matrix(\n\t[");
 	for (size_t i = 0; i < m->rows ; i++) {
 		if(i>=1) printf("\t");
@@ -122,6 +124,8 @@ void matrix_print(matrix *m){
 		printf("]");
 		if(!(i == m->rows-1)) printf(",\n");
 	};
+	// char* opstring = get_optype_string(m->op);
+	char* opstring = "NONE";
 	printf("],\nrequires_grad = %d, optype = %s)\n", m->requires_grad, opstring);
 }
 
@@ -247,12 +251,6 @@ matrix* matrix_random_normal(int ROWS, int COLS, double mu, double sigma){
 
 
 void matrix_add_rowwise(matrix* mat,  matrix* vec, matrix* out){
-	if(MATRIX_NULL(mat) || MATRIX_NULL(vec)){
-		MATRIX_ERROR("Invalid / NULL arguments to matrix_add_rowwise()\n");
-	}
-	if(vec->cols != mat->cols){
-		MATRIX_ERROR("Invalid matrix dimensions in matrix_add_rowwise(); number of columns are not equal\n");
-	}
 	for (size_t i = 0; i < out->rows; i++) {
 		for (size_t j = 0; j < out->cols; j++) {
 			out->data[i*out->cols + j] = vec->data[j]+mat->data[i*mat->cols + j]; 
@@ -262,12 +260,6 @@ void matrix_add_rowwise(matrix* mat,  matrix* vec, matrix* out){
 
 
 void matrix_add_colwise(matrix* mat, matrix* vec, matrix* out){
-	if(MATRIX_NULL(mat) || MATRIX_NULL(vec)){
-		MATRIX_ERROR("Invalid / NULL arguments to matrix_add_colwise()\n");
-	}
-	if(vec->rows != mat->rows){
-		MATRIX_ERROR("Invalid matrix dimensions in matrix_add_colwise(); number of rows are not equal\n");
-	}
 	for (size_t i = 0; i < out->rows; i++) {
 		for (size_t j = 0; j < out->cols; j++) {
 			out->data[i*out->cols + j] = vec->data[i]+mat->data[i*mat->cols + j]; 
@@ -277,13 +269,6 @@ void matrix_add_colwise(matrix* mat, matrix* vec, matrix* out){
 }
 
 void matrix_scalar_mul(matrix* input, double scalar, matrix* output){
-	if(MATRIX_NULL(input) || MATRIX_NULL(output)){
-		MATRIX_ERROR("Invalid matrix argument(s) in matrix_scalar_mul()\n");
-	}
-	if((input->rows != output->rows) || (input->cols != output->cols)){
-		MATRIX_ERROR("Invalid matrix dimensions provided in the arguments of matrix_scalar_mul()\n");
-
-	}
 	for(size_t i = 0; i < input->size; i++){
 		output->data[i] = scalar*input->data[i];
 	}
@@ -304,38 +289,38 @@ matrix* matrix_copy(const matrix* input){
 }
 
 
-void matrix_unary_op(matrix* inp1, matrix* out, OPTYPE operation){
-	if(MATRIX_NULL(inp1) || MATRIX_NULL(out)){
-		MATRIX_ERROR("NULL matrix argument(s) in matrix_map()\n");
-	}
-	if((inp1->rows != out->rows) || (inp1->cols != out->cols)){
-		MATRIX_ERROR("Invalid input matrix shapes in matrix_map()\n");
-	}
-	unary_op function  = get_unary_operation(operation);
-	for(size_t i = 0; i < inp1->size; i++)
-		out->data[i] = function(inp1->data[i]);
-	matrix_grad_on(out);
-	out->op = operation;
-	out->num_prevs = 1;
-	out->previous[0] = inp1; 
-} 
-
-void matrix_binary_op(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation){
-	if(MATRIX_NULL(inp1) || MATRIX_NULL(inp2) || MATRIX_NULL(out)){
-		MATRIX_ERROR("NULL matrix argument(s) in matrix_arithmetic()\n");
-	}
-	if((inp1->rows != inp2->rows) || (inp1->cols != inp2->cols)){
-		MATRIX_ERROR("Invalid input matrix shapes in matrix_arithmetic()\n");
-	}
-	binary_op function = get_binary_operation(operation);
-	for(size_t i = 0; i < inp1->size; i++)
-		out->data[i] = function(inp1->data[i], inp2->data[i]);
-	matrix_grad_on(out);
-	out->op = operation;
-	out->num_prevs = 2;
-	out->previous[0] = inp1; 
-	out->previous[1] = inp2;
-}
+// void matrix_unary_op(matrix* inp1, matrix* out, OPTYPE operation){
+// 	if(MATRIX_NULL(inp1) || MATRIX_NULL(out)){
+// 		MATRIX_ERROR("NULL matrix argument(s) in matrix_map()\n");
+// 	}
+// 	if((inp1->rows != out->rows) || (inp1->cols != out->cols)){
+// 		MATRIX_ERROR("Invalid input matrix shapes in matrix_map()\n");
+// 	}
+// 	unary_op function  = get_unary_operation(operation);
+// 	for(size_t i = 0; i < inp1->size; i++)
+// 		out->data[i] = function(inp1->data[i]);
+// 	matrix_grad_on(out);
+// 	out->op = operation;
+// 	out->num_prevs = 1;
+// 	out->previous[0] = inp1; 
+// } 
+//
+// void matrix_binary_op(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation){
+// 	if(MATRIX_NULL(inp1) || MATRIX_NULL(inp2) || MATRIX_NULL(out)){
+// 		MATRIX_ERROR("NULL matrix argument(s) in matrix_arithmetic()\n");
+// 	}
+// 	if((inp1->rows != inp2->rows) || (inp1->cols != inp2->cols)){
+// 		MATRIX_ERROR("Invalid input matrix shapes in matrix_arithmetic()\n");
+// 	}
+// 	binary_op function = get_binary_operation(operation);
+// 	for(size_t i = 0; i < inp1->size; i++)
+// 		out->data[i] = function(inp1->data[i], inp2->data[i]);
+// 	matrix_grad_on(out);
+// 	out->op = operation;
+// 	out->num_prevs = 2;
+// 	out->previous[0] = inp1; 
+// 	out->previous[1] = inp2;
+// }
 
 
 
@@ -473,12 +458,3 @@ void matrix_push_back(matrix* mat, double* array){
 	mat->size = mat->rows*mat->cols;
 }
 
-// matrix* matrix_from_arrays(double** arrays, int num_rows, int num_cols){
-// 	matrix* m = matrix_alloc(num_rows, num_cols);
-// 	for(size_t i = 0; i < m->rows; i++){
-// 		for(size_t j = 0; j < m->cols; j++){
-// 			m->data[offset(m, i, j)] = arrays[i][j];
-// 		}
-// 	}
-// 	return m;
-// }
