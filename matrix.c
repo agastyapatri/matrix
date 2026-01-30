@@ -14,7 +14,6 @@ matrix* matrix_alloc(int ROWS, int COLS, bool requires_grad){
 	m->cols = COLS;
 	m->op = NONE;
 	m->ref_count = (int*)malloc(sizeof(size_t));
-	*(m->ref_count) = 1;
 
 	m->stride = (m->cols + (ALIGNMENT / sizeof(double)) - 1)  & ~((ALIGNMENT / sizeof(double)) - 1);
 	m->padding = m->stride - m->cols;
@@ -59,9 +58,7 @@ void matrix_grad_off(matrix* m){
 
 matrix* matrix_ones(int ROWS, int COLS, bool requires_grad){
 	matrix* m = matrix_alloc(ROWS,  COLS, requires_grad);
-	for(size_t i = 0; i < m->size; i++){
-		m->data[i] = 1;
-	}
+	memset(m->data, 1, m->bytes);
 	return m;
 }
 
@@ -117,7 +114,8 @@ void matrix_print(matrix *m){
 		if(!(i == m->rows-1)) printf(",\n");
 	};
 
-	char* opstring = "NONE";
+	char* opstring = get_optype_string(m->op);
+	// char* opstring = "none";
 	printf("],\nrequires_grad = %d, optype = %s)\n", m->requires_grad, opstring);
 }
 

@@ -69,9 +69,9 @@ typedef enum {
 
 typedef struct matrix{
 	//	LOGICAL CORE
-	size_t rows, cols;
+	size_t rows;
+	size_t cols;
 	int* ref_count;
-	size_t num_els;
 	double* data; 
 
 	//	PHYSICAL METADATA FOR SIMD.

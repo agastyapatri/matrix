@@ -18,7 +18,6 @@ typedef double (*binary_op)(double, double);
 typedef double (*ternary_op)(double, double, double);
 
 
-
 static inline void MATRIX_UNARY_OP(matrix* inp1, matrix* out, unary_op function){
 	for(size_t i = 0; i < inp1->size; i++)
 		out->data[i] = function(inp1->data[i]);
@@ -238,49 +237,49 @@ static inline double squared_error(double x, double y){
 // }
 //
 //
-// static inline char* get_optype_string(OPTYPE op){
-// 	switch (op) {
-// 		case ADD: 
-// 			return "add";
-// 		case SUB: 
-// 			return "sub";
-// 		case MUL: 
-// 			return "mul";
-// 		case DIV: 
-// 			return "div";
-// 		case SQUARE: 
-// 			return "square";
-// 		case CUBE: 
-// 			return "cube";
-// 		case NONE: 
-// 			return "none";
-// 		case SIN:
-// 			return "sin";
-// 		case COS:
-// 			return "sin";
-// 		case TAN:
-// 			return "tan";
-// 		case ARCSIN:
-// 			return "arcsin";
-// 		case ARCCOS:
-// 			return "arccos";
-// 		case ARCTAN:
-// 			return "arctan";
-// 		case SINH:
-// 			return "sinh";
-// 		case COSH:
-// 			return "cosh";
-// 		case TANH: 
-// 			return "tanh";
-// 		case LOG: 
-// 			return "log";
-// 		case EXP: 
-// 			return "exp";
-// 		case MATMUL: 
-// 			return "matmul";
-// 	}
-// 	return NULL;
-// }
+static inline char* get_optype_string(OPTYPE op){
+	switch (op) {
+		case ADD: 
+			return "add";
+		case SUB: 
+			return "sub";
+		case MUL: 
+			return "mul";
+		case DIV: 
+			return "div";
+		case SQUARE: 
+			return "square";
+		case CUBE: 
+			return "cube";
+		case NONE: 
+			return "none";
+		case SIN:
+			return "sin";
+		case COS:
+			return "sin";
+		case TAN:
+			return "tan";
+		case ARCSIN:
+			return "arcsin";
+		case ARCCOS:
+			return "arccos";
+		case ARCTAN:
+			return "arctan";
+		case SINH:
+			return "sinh";
+		case COSH:
+			return "cosh";
+		case TANH: 
+			return "tanh";
+		case LOG: 
+			return "log";
+		case EXP: 
+			return "exp";
+		case MATMUL: 
+			return "matmul";
+	}
+	return NULL;
+}
 
 #endif // !matrix_INCLUDE_FUNCTIONAL_H
 
