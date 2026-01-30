@@ -80,8 +80,6 @@ typedef struct matrix{
 	size_t size;
 	int padding;
 	
-
-
 	//	AUTOGRAD METADATA
 	bool requires_grad;
 	double* grad;
@@ -119,47 +117,33 @@ matrix* matrix_std(const matrix* m);
 matrix* matrix_sum(const matrix* m);
 void matrix_grad_on(matrix* m);
 void matrix_grad_off(matrix* m);
-
-
-matrix* matrix_alloc(int ROWS, int COLS);
-// matrix* matrix_aligned_alloc(int ROWS, int COLS);
-matrix* matrix_ones(int ROWS, int COLS);
-matrix* matrix_eye(int SIDE);
-matrix* matrix_linspace(double start, double end, size_t num);
-matrix* matrix_arange(double start, double end, double step);
+// matrix* matrix_alloc(int ROWS, int COLS);
+matrix* matrix_alloc(int ROWS, int COLS, bool requires_grad);
+matrix* matrix_ones(int ROWS, int COLS, bool requires_grad);
+matrix* matrix_eye(int SIDE, bool requires_grad);
+matrix* matrix_linspace(double start, double end, size_t num, bool requires_grad);
+matrix* matrix_arange(double start, double end, double step, bool requires_grad);
 void matrix_print(matrix* m);
 void matrix_free(matrix* m);
 matrix* matrix_transpose(matrix* m);
 matrix* matrix_copy(const matrix* input);
 matrix* matrix_reshape(matrix* m, size_t ROWS, size_t COLS);
-
-
 void matrix_scale(matrix* a, double b);
 void matrix_hadamard(matrix* a, matrix* b, matrix* c);
 bool matrix_equality(matrix* a, matrix* b);
-void matmul(matrix* inp1, matrix* inp2, matrix* out);
-
-void matrix_unary_op(matrix* inp1, matrix* out, OPTYPE operation);
-void matrix_binary_op(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation);
-
-
-//	Replaces the elements of an existing matrix with random elements between -1 and 1
+matrix* matrix_add(matrix* inp1, matrix* inp2);
+matrix* matrix_sub(matrix* inp1, matrix* inp2);
+matrix* matrix_mul(matrix* inp1, matrix* inp2);
+matrix* matrix_div(matrix* inp1, matrix* inp2);
+matrix* matrix_matmul(matrix* inp1, matrix* inp2);
+// void matrix_unary_op(matrix* inp1, matrix* out, OPTYPE operation);
+// void matrix_binary_op(matrix* inp1, matrix* inp2, matrix* out, OPTYPE operation);
 void matrix_randomize(matrix* m, double (*function)(double, double));
-
-//	Creates a matrix with random elements between -1 and 1
-matrix* matrix_random_uniform(int ROWS, int COLS, double left, double right);
-matrix* matrix_random_normal(int ROWS, int COLS, double mu, double sigma);
-
-
-//	Adds a matrix and a row vector by row-wise broadcasting of the row vector (1xm) matrix
+matrix* matrix_random_uniform(int ROWS, int COLS, double left, double right, bool requires_grad);
+matrix* matrix_random_normal(int ROWS, int COLS, double mu, double sigma, bool requires_grad);
 void matrix_add_rowwise(matrix* mat, matrix* vec, matrix* out);
-
-//	Adds a matrix and a column vector by col-wise broadcasting of the column vector (mx1) matrix
 void matrix_add_colwise(matrix* mat, matrix* vec, matrix* out);
-
 matrix* matrix_sort(const matrix* m);
-// double matrix_search(const matrix* m, double element);
-
 double matrix_det(const matrix* m);
 matrix* matrix_inverse(const matrix* m);
 double matrix_trace(const matrix* m);

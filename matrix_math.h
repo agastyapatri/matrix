@@ -19,11 +19,14 @@ typedef double (*ternary_op)(double, double, double);
 
 
 
-
-
-/*********************************************
- *	FUNCTIONS
- *********************************************/ 
+static inline void MATRIX_UNARY_OP(matrix* inp1, matrix* out, unary_op function){
+	for(size_t i = 0; i < inp1->size; i++)
+		out->data[i] = function(inp1->data[i]);
+}
+static inline void MATRIX_BINARY_OP(matrix* inp1, matrix* inp2, matrix* out, binary_op function){
+	for(size_t i = 0; i < inp1->size; i++)
+		out->data[i] = function(inp1->data[i], inp2->data[i]);
+}
 
 static inline void MATRIX_ADD(matrix* inp1, matrix* inp2, matrix* out){
 	for(size_t i = 0; i < inp1->size; i++)
@@ -45,138 +48,75 @@ static inline void MATRIX_DIV(matrix* inp1, matrix* inp2, matrix* out){
 		out->data[i] = inp1->data[i] / inp2->data[i];
 }
 
-
-// static inline double matrix_add(double x, double y){
-// 	return x + y;
-// }
-
-// static inline double matrix_sub(double x, double y){
-// 	return x - y;
-// }
-// static inline double matrix_mul(double x, double y){
-// 	return x * y;
-// }
-
-// static inline double matrix_div(double x, double y){
-// 	return x / y;
-// }
-
-static inline double matrix_square(double x){
-	return x*x;
+static inline void MATRIX_MATMUL(matrix* inp1, matrix* inp2, matrix* out){
+	for(size_t bi = 0; bi < inp1->rows; bi+=BLOCK_SIZE){
+		for(size_t bk = 0; bk < inp1->cols; bk+=BLOCK_SIZE){
+			for(size_t bj = 0; bj < inp2->cols; bj+=BLOCK_SIZE){
+				for(size_t i = bi; (i < inp1->rows) && (i < bi + BLOCK_SIZE); i++){
+					for(size_t k = bk; (k < inp1->cols) && (k < bk + BLOCK_SIZE); k++){
+						double r = inp1->data[offset(inp1, i, k)];
+						for(size_t j = bj; (j < inp2->cols) && (j < bj + BLOCK_SIZE); j++){
+							out->data[offset(out, i, j)] += r*inp2->data[offset(inp2, k, j)];
+						}
+					} 
+				}
+			} 
+		} 
+	}
 }
 
-static inline double matrix_cube(double x){
-	return x*x*x;
-}
-
-// static inline double matrix_sigmoid(double x){
-// 	return 1.0 / (1 + exp(-x));
-// }
-
-// static inline double matrix_relu(double x){
-// 	return (x > 0) ? x : 0.0;
-// }
-
-static inline double matrix_tanh(double x){
-	return tanh(x);
-}
-static inline double matrix_sinh(double x){
-	return sinh(x);
-}
-static inline double matrix_cosh(double x){
-	return cosh(x);
-}
-
-
-static inline double matrix_sin(double x){
-	return sin(x);
-}
-
-static inline double matrix_cos(double x){
-	return cos(x);
-}
-
-static inline double matrix_tan(double x){
-	return tan(x);
-}
-static inline double matrix_arcsin(double x){
-	return asin(x);
-}
-
-static inline double matrix_arccos(double x){
-	return acos(x);
-}
-
-static inline double matrix_arctan(double x){
-	return atan(x);
-}
-
-
-static inline double matrix_exp(double x){
-	return exp(x);
-}
-
-static inline double matrix_log(double x){
-	return log(x);
-}
 
 
 
 /*********************************************
- *	DERIVATIVES 
+ *	SCALAR FUNCTIONS
  *********************************************/ 
 
-static inline double matrix_dtanh(double x){
-	return 1 - matrix_square(matrix_tanh(x));
+static inline double dtanh(double x){
+	return 1 - pow(tanh(x), 2);
 }
 
-
-static inline double matrix_dsquare(double x){
+static inline double dsquare(double x){
 	return 2*x;
 }
 
-static inline double matrix_dcube(double x){
+static inline double dcube(double x){
 	return 3*x*x;
 }
 
-static inline double matrix_dexp(double x){
+static inline double dexp(double x){
 	return exp(x);
 }
 
-static inline double matrix_dlog(double x){
+static inline double dlog(double x){
 	return 1 / x;
 }
 
 
-static inline double matrix_dsin(double x){
+static inline double dsin(double x){
 	return cos(x);
 }
 
-static inline double matrix_dcos(double x){
+static inline double dcos(double x){
 	return -sin(x);
 }
 
-static inline double matrix_dtan(double x){
-	return 1 + matrix_square(tan(x));
+static inline double dtan(double x){
+	return 1 + pow(tan(x), 2);
 }
 
-
-
-/*
- *	RANDOM NUMBERS AND PROBABILITY DISTRIBUTIONS
- */ 
 
 static inline double rand_double(){
 	return rand()/(double)RAND_MAX;
 }
 
-static inline double matrix_normal(double x, double mu, double sigma){
+static inline double normal(double x, double mu, double sigma){
 	double temp = ((x - mu)*(x - mu))/(sigma*sigma);
 	return (1/sqrt(2 * PI * sigma))*(exp(-0.5 * temp));
 }
 
 
-static inline double matrix_rand_normal(double mu, double sigma){
+static inline double rand_normal(double mu, double sigma){
 	double n2 = 0.0; 
 	double n2_cached = 0.0; 
 	if(!n2_cached){
@@ -196,14 +136,18 @@ static inline double matrix_rand_normal(double mu, double sigma){
 }
 
 
-static inline double matrix_rand_uniform(double left, double right){
+static inline double rand_uniform(double left, double right){
 	return rand_double()*(right - left) + left;
 }
 
 
-static inline double matrix_squared_error(double x, double y){
+static inline double squared_error(double x, double y){
 	return (x - y)*(x - y);
 }
+
+
+
+
 
 
 
