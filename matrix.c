@@ -4,10 +4,6 @@
 #include <stdio.h>
 #include <time.h>
 #include "matrix_math.h"
-
-
-
-
 // matrix* matrix_alloc(int ROWS, int COLS){
 // 	matrix* m = calloc(1, sizeof(matrix));
 // 	m->cols = COLS; 
@@ -51,8 +47,7 @@ matrix* matrix_alloc(int ROWS, int COLS){
 
 
 void matrix_grad_on(matrix* m){
-	m->requires_grad = 1; 
-	// m->grad = (double*)calloc(m->size, sizeof(double));
+	m->requires_grad = true;
 	size_t bytes = sizeof(double)*m->size;
 	bytes += ALIGNMENT - (bytes % ALIGNMENT);
 	m->grad = (double*)aligned_alloc(ALIGNMENT, bytes);
@@ -146,6 +141,15 @@ void matmul(matrix* inp1, matrix* inp2, matrix* out){
 				}
 			} 
 		} 
+	}
+	out->requires_grad = inp1->requires_grad || inp2->requires_grad;
+	if(out->requires_grad){
+		out->op = MATMUL;
+		out->previous[0] = inp1;
+		out->previous[1] = inp2;
+		out->num_prevs = 2;
+		(*(inp1->ref_count))++;
+		(*(inp2->ref_count))++;
 	}
 }
 
@@ -478,4 +482,3 @@ void matrix_push_back(matrix* mat, double* array){
 // 	}
 // 	return m;
 // }
-

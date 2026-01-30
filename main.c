@@ -34,25 +34,94 @@
 // 	}
 // }
 
+matrix* matrix_add_alternate(matrix* inp1, matrix* inp2){
+	matrix* out = matrix_alloc(inp1->rows, inp2->cols);
+	for(size_t i = 0; i < inp1->size; i++)
+		out->data[i] = inp1->data[i] + inp2->data[i];
+
+	if(inp1->requires_grad || inp2->requires_grad){
+		matrix_grad_on(out);
+		out->previous[0] = inp1;
+		out->previous[1] = inp2;
+		out->num_prevs = 2;
+		out->op = ADD;
+		(*(inp1->ref_count))++;
+		(*(inp2->ref_count))++;
+	}
+	return out;
+}
+matrix* matrix_sub_alternate(matrix* inp1, matrix* inp2){
+	matrix* out = matrix_alloc(inp1->rows, inp2->cols);
+	for(size_t i = 0; i < inp1->size; i++)
+		out->data[i] = inp1->data[i] - inp2->data[i];
+
+	if(inp1->requires_grad || inp2->requires_grad){
+		matrix_grad_on(out);
+		out->previous[0] = inp1;
+		out->previous[1] = inp2;
+		out->num_prevs = 2;
+		out->op = SUB;
+		(*(inp1->ref_count))++;
+		(*(inp2->ref_count))++;
+	}
+	return out;
+}
+matrix* matrix_elemmul_alternate(matrix* inp1, matrix* inp2){
+	matrix* out = matrix_alloc(inp1->rows, inp2->cols);
+	for(size_t i = 0; i < inp1->size; i++)
+		out->data[i] = inp1->data[i] * inp2->data[i];
+
+	if(inp1->requires_grad || inp2->requires_grad){
+		matrix_grad_on(out);
+		out->previous[0] = inp1;
+		out->previous[1] = inp2;
+		out->num_prevs = 2;
+		out->op = MUL;
+		(*(inp1->ref_count))++;
+		(*(inp2->ref_count))++;
+	}
+	return out;
+}
+
+matrix* matmul_alternate(matrix* inp1, matrix* inp2){
+	matrix* out = matrix_alloc(inp1->rows, inp2->cols);
+	for(size_t bi = 0; bi < inp1->rows; bi+=BLOCK_SIZE){
+		for(size_t bk = 0; bk < inp1->cols; bk+=BLOCK_SIZE){
+			for(size_t bj = 0; bj < inp2->cols; bj+=BLOCK_SIZE){
+
+				for(size_t i = bi; (i < inp1->rows) && (i < bi + BLOCK_SIZE); i++){
+					for(size_t k = bk; (k < inp1->cols) && (k < bk + BLOCK_SIZE); k++){
+						double r = inp1->data[offset(inp1, i, k)];
+						for(size_t j = bj; (j < inp2->cols) && (j < bj + BLOCK_SIZE); j++){
+							out->data[offset(out, i, j)] += r*inp2->data[offset(inp2, k, j)];
+						}
+					} 
+				}
+			} 
+		} 
+	}
+	out->requires_grad = inp1->requires_grad || inp2->requires_grad;
+	if(out->requires_grad){
+		out->op = MATMUL;
+		out->previous[0] = inp1;
+		out->previous[1] = inp2;
+		out->num_prevs = 2;
+		(*(inp1->ref_count))++;
+		(*(inp2->ref_count))++;
+	}
+	return out;
+}
+
+
+
 
 
 int main(){
-	matrix* m = matrix_alloc(16, 784);
-	matrix* n = matrix_alloc(784, 392);
-	matrix* o = matrix_alloc(392, 196);
-	matrix* p = matrix_alloc(196, 49);
-	matrix* q = matrix_alloc(49, 10);
+	matrix* m = matrix_random_normal(10, 5, 0, 1);
+	matrix* n = matrix_random_normal(10, 5, 0, 1);
+	matrix_grad_on(m);
+	matrix* out = matrix_sub_alternate(m, n);
 
 
-	TIMER(matmul(m, n, o));
-
-
-	matrix_free(m);
-	matrix_free(n);
-	matrix_free(o);
-	matrix_free(p);
-	matrix_free(q);
-
-
-
+	matrix_print(out);
 }

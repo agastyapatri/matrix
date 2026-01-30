@@ -33,6 +33,7 @@ The next steps are to build out `linalg.h` with more abstracted linear algebra.
 
 In no particular order:
 
+-   **Parallelization of core math utils**
 -   Matrix decompositions
 -   Matrix determinant
 -   Matrix eigenvalues
@@ -62,6 +63,21 @@ ar rcs libmatrix.a matrix.o
 rm matrix.o
 ```
 Do not forget to add `-Ipath/to/matrix.h` in your project LSP settings.
+
+### **Autograd with `matrix`**
+This library was built for simple neural network training. 
+I need to refactor some code to allow for automatic differentiation. 
+
+The core workflow is: 
+
+1.  Operation recording (Forward pass): every mathematical involving two source matrices must do two things: compute the result and link the result to its parents in the `matrix->previous` array.
+2.  Topological Sort: Before backprop can begin, the graph must be sorted so that a child node is always processed before its parent.
+3.  Apply the chain rule recursively.
+
+
+
+
+
 
 
 

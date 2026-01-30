@@ -18,7 +18,7 @@
 #define ALIGNMENT 64
 #endif
 
-#define TIMER(function) clock_t start = clock();\
+#define MATRIX_TIMER(function) clock_t start = clock();\
 						function;				\
 						clock_t end = clock();  \
 						printf("%0.10f\n", (double)(end - start)/CLOCKS_PER_SEC);
@@ -26,6 +26,11 @@
 #define MATRIX_NULL(m) (m==NULL) ? 1 : 0
 #define MATRIX_ERROR(msg) printf(msg);	\
 						  exit(EXIT_FAILURE);
+
+
+// #define MATRIX_MEMALOC(size) (size > 1024) ? aligned_alloc(ALIGNMENT, size) : malloc(size);
+
+
 
 typedef struct matrix{
 	//	core metadata

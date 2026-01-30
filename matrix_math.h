@@ -26,7 +26,7 @@ typedef enum {
 	SUB,
 	MUL,
 	DIV,
-	// MATMUL,
+	MATMUL,
 	
 
 	//	unary ops
@@ -217,7 +217,6 @@ static inline double matrix_squared_error(double x, double y){
 
 
 static inline unary_op get_unary_operation(OPTYPE operation){
-	unary_op function;
 	switch (operation) {
 		case(SQUARE):
 			return matrix_square;
@@ -255,8 +254,9 @@ static inline unary_op get_unary_operation(OPTYPE operation){
 			return NULL;
 		case(DIV):
 			return NULL;
+		case(MATMUL):
+			return NULL;
 	}
-	return function;
 }
 
 static inline binary_op get_binary_operation(OPTYPE operation){
@@ -269,6 +269,8 @@ static inline binary_op get_binary_operation(OPTYPE operation){
 			return matrix_sub;
 		case(DIV):
 			return matrix_div;
+		case(MATMUL):
+			return NULL;
 		case(SQUARE):
 			return NULL;
 		case(CUBE):
@@ -339,6 +341,8 @@ static inline char* get_optype_string(OPTYPE op){
 			return "log";
 		case EXP: 
 			return "exp";
+		case MATMUL: 
+			return "matmul";
 	}
 	return NULL;
 }
