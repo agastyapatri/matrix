@@ -25,6 +25,7 @@
 #define MATRIX_NULL(m) (m==NULL) ? 1 : 0
 #define MATRIX_ERROR(msg) printf(msg);	\
 						  exit(EXIT_FAILURE);
+#define IN_COMP_GRAPH(inp1, inp2) inp1->requires_grad || inp2->requires_grad
 
 
 
@@ -83,6 +84,7 @@ typedef struct matrix{
 	//	AUTOGRAD METADATA
 	bool requires_grad;
 	double* grad;
+	
 	OPTYPE op;
 	struct matrix* previous[MAX_PREVS];
 	int num_prevs;
@@ -148,10 +150,9 @@ double matrix_det(const matrix* m);
 matrix* matrix_inverse(const matrix* m);
 double matrix_trace(const matrix* m);
 
-void matrix_push_back(matrix* mat, double* array);
-
 
 //TODO 
+void matrix_push_back(matrix* mat, double* array);
 matrix* matrix_from_arrays(double** arrays, int num_rows, int num_cols);
 
 

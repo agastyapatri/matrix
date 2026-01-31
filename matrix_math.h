@@ -6,6 +6,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <immintrin.h>
 #include "matrix.h"
 
 #define PI 3.1415926545897932	
@@ -51,6 +52,8 @@ static inline void MATRIX_MATMUL(matrix* inp1, matrix* inp2, matrix* out){
 	for(size_t bi = 0; bi < inp1->rows; bi+=BLOCK_SIZE){
 		for(size_t bk = 0; bk < inp1->cols; bk+=BLOCK_SIZE){
 			for(size_t bj = 0; bj < inp2->cols; bj+=BLOCK_SIZE){
+				
+
 				for(size_t i = bi; (i < inp1->rows) && (i < bi + BLOCK_SIZE); i++){
 					for(size_t k = bk; (k < inp1->cols) && (k < bk + BLOCK_SIZE); k++){
 						double r = inp1->data[offset(inp1, i, k)];
@@ -59,6 +62,9 @@ static inline void MATRIX_MATMUL(matrix* inp1, matrix* inp2, matrix* out){
 						}
 					} 
 				}
+
+
+
 			} 
 		} 
 	}
