@@ -28,31 +28,102 @@ static inline void MATRIX_BINARY_OP(matrix* inp1, matrix* inp2, matrix* out, bin
 		out->data[i] = function(inp1->data[i], inp2->data[i]);
 }
 
+// static inline void MATRIX_ADD(matrix* inp1, matrix* inp2, matrix* out){
+// 	for(size_t i = 0; i < inp1->size; i++)
+// 		out->data[i] = inp1->data[i] + inp2->data[i];
+// }
+// static inline void MATRIX_SUB(matrix* inp1, matrix* inp2, matrix* out){
+// 	for(size_t i = 0; i < inp1->size; i++)
+// 		out->data[i] = inp1->data[i] - inp2->data[i];
+// }
+// static inline void MATRIX_MUL(matrix* inp1, matrix* inp2, matrix* out){
+// 	for(size_t i = 0; i < inp1->size; i++)
+// 		out->data[i] = inp1->data[i] * inp2->data[i];
+// }
+// static inline void MATRIX_DIV(matrix* inp1, matrix* inp2, matrix* out){
+// 	for(size_t i = 0; i < inp1->size; i++)
+// 		out->data[i] = inp1->data[i] / inp2->data[i];
+// }
+
 static inline void MATRIX_ADD(matrix* inp1, matrix* inp2, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++)
-		out->data[i] = inp1->data[i] + inp2->data[i];
+	for(size_t i = 0; i < inp1->rows; i++){
+		double* d1 = inp1->data + (i * inp1->stride);
+		double* d2 = inp2->data + (i * inp2->stride);
+		double* o = out->data + (i * out->stride);
+		size_t j = 0;
+		for(; j <= inp1->cols - 4; j+=4){
+			__m256d v1 = _mm256_load_pd(&d1[j]);
+			__m256d v2 = _mm256_load_pd(&d2[j]);
+			__m256d res = _mm256_add_pd(v1, v2);
+			_mm256_store_pd(&o[j], res);
+		}
+		for(; j < inp1->cols; j++){
+			o[j] = d1[j] + d2[j];
+		}
+	}
 }
 
 static inline void MATRIX_SUB(matrix* inp1, matrix* inp2, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++)
-		out->data[i] = inp1->data[i] - inp2->data[i];
+	for(size_t i = 0; i < inp1->rows; i++){
+		double* d1 = inp1->data + (i * inp1->stride);
+		double* d2 = inp2->data + (i * inp2->stride);
+		double* o = out->data + (i * out->stride);
+		size_t j = 0;
+		for(; j <= inp1->cols - 4; j+=4){
+			__m256d v1 = _mm256_load_pd(&d1[j]);
+			__m256d v2 = _mm256_load_pd(&d2[j]);
+			__m256d res = _mm256_sub_pd(v1, v2);
+			_mm256_store_pd(&o[j], res);
+		}
+		for(; j < inp1->cols; j++){
+			o[j] = d1[j] + d2[j];
+		}
+	}
 }
 
 static inline void MATRIX_MUL(matrix* inp1, matrix* inp2, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++)
-		out->data[i] = inp1->data[i] * inp2->data[i];
+	for(size_t i = 0; i < inp1->rows; i++){
+		double* d1 = inp1->data + (i * inp1->stride);
+		double* d2 = inp2->data + (i * inp2->stride);
+		double* o = out->data + (i * out->stride);
+		size_t j = 0;
+		for(; j <= inp1->cols - 4; j+=4){
+			__m256d v1 = _mm256_load_pd(&d1[j]);
+			__m256d v2 = _mm256_load_pd(&d2[j]);
+			__m256d res = _mm256_mul_pd(v1, v2);
+			_mm256_store_pd(&o[j], res);
+		}
+		for(; j < inp1->cols; j++){
+			o[j] = d1[j] + d2[j];
+		}
+	}
+
 }
 
+
 static inline void MATRIX_DIV(matrix* inp1, matrix* inp2, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++)
-		out->data[i] = inp1->data[i] / inp2->data[i];
+	for(size_t i = 0; i < inp1->rows; i++){
+		double* d1 = inp1->data + (i * inp1->stride);
+		double* d2 = inp2->data + (i * inp2->stride);
+		double* o = out->data + (i * out->stride);
+		size_t j = 0;
+		for(; j <= inp1->cols - 4; j+=4){
+			__m256d v1 = _mm256_load_pd(&d1[j]);
+			__m256d v2 = _mm256_load_pd(&d2[j]);
+			__m256d res = _mm256_div_pd(v1, v2);
+			_mm256_store_pd(&o[j], res);
+		}
+		for(; j < inp1->cols; j++){
+			o[j] = d1[j] + d2[j];
+		}
+	}
 }
 
 static inline void MATRIX_MATMUL(matrix* inp1, matrix* inp2, matrix* out){
 	for(size_t bi = 0; bi < inp1->rows; bi+=BLOCK_SIZE){
 		for(size_t bk = 0; bk < inp1->cols; bk+=BLOCK_SIZE){
 			for(size_t bj = 0; bj < inp2->cols; bj+=BLOCK_SIZE){
-				
+
 
 				for(size_t i = bi; (i < inp1->rows) && (i < bi + BLOCK_SIZE); i++){
 					for(size_t k = bk; (k < inp1->cols) && (k < bk + BLOCK_SIZE); k++){
@@ -69,6 +140,7 @@ static inline void MATRIX_MATMUL(matrix* inp1, matrix* inp2, matrix* out){
 		} 
 	}
 }
+
 
 
 

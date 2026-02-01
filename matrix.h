@@ -92,7 +92,7 @@ typedef struct matrix{
 
 
 static inline size_t offset(const matrix* m, int i, int j){
-	return (i*m->cols + j);
+	return (i*m->stride + j);
 }
 static inline double get(const matrix* m, int i, int j){
 	return m->data[offset(m, i, j)];
