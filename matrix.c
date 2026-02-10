@@ -112,7 +112,15 @@ void matrix_print(matrix *m){
 
 	char* opstring = get_optype_string(m->op);
 	// char* opstring = "none";
-	printf("],\nrequires_grad = %d, optype = %s)\n", m->requires_grad, opstring);
+	// printf("],\nrequires_grad = %d, optype = %s)\n", m->requires_grad, opstring);
+	printf("]");
+	if(m->requires_grad){
+		printf("\nrequires_grad = %d", m->requires_grad);
+	}
+	if(m->op != NONE){
+		printf(", optype = %s", get_optype_string(m->op));
+	}
+	printf(")\n");
 }
 
 

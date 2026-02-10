@@ -16,9 +16,8 @@
 
 
 int main(){
-	matrix* m = matrix_ones(1, COLS, 0);
-	matrix* n = matrix_ones(COLS, 1, 0);
-	matrix* o = matrix_matmul(m, n);
+	matrix* m = matrix_ones(1, 784, 0);
+	printf("%d %d\n", m->stride, m->padding);
 
 
 

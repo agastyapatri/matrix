@@ -18,7 +18,7 @@ The structure of this project is:
 matrix/
     |-matrix.h
     |-matrix.c
-    |-functional.h
+    |-matrix_math.h
     |-linalg.h  // under construction!   
     |-linalg.c  // under construction!     
 ```
