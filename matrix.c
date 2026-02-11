@@ -115,10 +115,7 @@ void matrix_print(matrix *m){
 	// printf("],\nrequires_grad = %d, optype = %s)\n", m->requires_grad, opstring);
 	printf("]");
 	if(m->requires_grad){
-		printf("\nrequires_grad = %d", m->requires_grad);
-	}
-	if(m->op != NONE){
-		printf(", optype = %s", get_optype_string(m->op));
+		printf("\nrequires_grad = %d, optype = %s", m->requires_grad, opstring);
 	}
 	printf(")\n");
 }
@@ -145,7 +142,6 @@ matrix* matrix_matmul(matrix* inp1, matrix* inp2){
 matrix* matrix_add(matrix* inp1, matrix* inp2){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad || inp2->requires_grad);
 	MATRIX_ADD(inp1, inp2, out);
-	out->requires_grad = inp1->requires_grad || inp2->requires_grad;
 	if(out->requires_grad){
 		out->op = ADD;
 		out->previous[0] = inp1;
@@ -153,6 +149,84 @@ matrix* matrix_add(matrix* inp1, matrix* inp2){
 		out->num_prevs = 2;
 		(*(inp1->ref_count))++;
 		(*(inp2->ref_count))++;
+	}
+	return out;
+}
+
+matrix* matrix_pow(matrix* inp1, matrix* inp2){
+	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad || inp2->requires_grad);
+	MATRIX_POW(inp1, inp2, out);
+	if(out->requires_grad){
+		out->op = POW;
+		out->previous[0] = inp1;
+		out->previous[1] = inp2;
+		out->num_prevs = 2;
+		(*(inp1->ref_count))++;
+		(*(inp2->ref_count))++;
+	}
+	return out;
+}
+
+matrix* matrix_sin(matrix* inp1){
+	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
+	MATRIX_SIN(inp1, out);
+	if(out->requires_grad){
+		out->op = SIN;
+		out->previous[0] = inp1;
+		out->previous[1] = NULL;
+		out->num_prevs = 1;
+		(*(inp1->ref_count))++;
+	}
+	return out;
+}
+
+matrix* matrix_tanh(matrix* inp1){
+	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
+	MATRIX_TANH(inp1, out);
+	if(out->requires_grad){
+		out->op = TANH;
+		out->previous[0] = inp1;
+		out->previous[1] = NULL;
+		out->num_prevs = 1;
+		(*(inp1->ref_count))++;
+	}
+	return out;
+}
+
+matrix* matrix_log(matrix* inp1){
+	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
+	MATRIX_LOG(inp1, out);
+	if(out->requires_grad){
+		out->op = LOG;
+		out->previous[0] = inp1;
+		out->previous[1] = NULL;
+		out->num_prevs = 1;
+		(*(inp1->ref_count))++;
+	}
+	return out;
+}
+matrix* matrix_exp(matrix* inp1){
+	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
+	MATRIX_EXP(inp1, out);
+	if(out->requires_grad){
+		out->op = EXP;
+		out->previous[0] = inp1;
+		out->previous[1] = NULL;
+		out->num_prevs = 1;
+		(*(inp1->ref_count))++;
+	}
+	return out;
+}
+
+matrix* matrix_cos(matrix* inp1){
+	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
+	MATRIX_COS(inp1, out);
+	if(out->requires_grad){
+		out->op = COS;
+		out->previous[0] = inp1;
+		out->previous[1] = NULL;
+		out->num_prevs = 1;
+		(*(inp1->ref_count))++;
 	}
 	return out;
 }
@@ -239,15 +313,6 @@ void matrix_scale(matrix* a, double b){
 	}
 } 
 
-
-
-void matrix_hadamard(matrix* a, matrix* b, matrix* c){
-	for(size_t i = 0; i < a->rows; i++){
-		for(size_t j = 0; j < b->cols; j++){
-			c->data[i*c->cols + j] = a->data[i*a->cols + j] * b->data[i*a->cols + j] ;
-		} 
-	}
-}
 
 bool matrix_equality(matrix* a, matrix* b){
 	if(!(matrix_shape_equality(a, b))){
@@ -441,7 +506,7 @@ matrix* matrix_inverse(const matrix* m){
 }
 
 double matrix_trace(const matrix* m){
-	if(!is_square(m))
+	if(!matrix_is_square(m))
 		MATRIX_ERROR("Matrix argument is not square in matrix_trace()\n");
 	double trace = 0;
 	for(size_t i = 0; i < m->rows; i++){
@@ -450,14 +515,4 @@ double matrix_trace(const matrix* m){
 	return trace;
 }
 
-
-//	TODO: figure out how to account for memory alignment here
-void matrix_push_back(matrix* mat, double* array){
-	mat->rows++;
-	mat->data = realloc(mat->data, mat->rows*mat->cols*sizeof(double));
-	for(size_t i = mat->size; i < mat->rows* mat->cols; i++){
-		mat->data[i] = array[i - mat->size];
-	}
-	mat->size = mat->rows*mat->cols;
-}
 

@@ -28,23 +28,6 @@ static inline void MATRIX_BINARY_OP(matrix* inp1, matrix* inp2, matrix* out, bin
 		out->data[i] = function(inp1->data[i], inp2->data[i]);
 }
 
-// static inline void MATRIX_ADD(matrix* inp1, matrix* inp2, matrix* out){
-// 	for(size_t i = 0; i < inp1->size; i++)
-// 		out->data[i] = inp1->data[i] + inp2->data[i];
-// }
-// static inline void MATRIX_SUB(matrix* inp1, matrix* inp2, matrix* out){
-// 	for(size_t i = 0; i < inp1->size; i++)
-// 		out->data[i] = inp1->data[i] - inp2->data[i];
-// }
-// static inline void MATRIX_MUL(matrix* inp1, matrix* inp2, matrix* out){
-// 	for(size_t i = 0; i < inp1->size; i++)
-// 		out->data[i] = inp1->data[i] * inp2->data[i];
-// }
-// static inline void MATRIX_DIV(matrix* inp1, matrix* inp2, matrix* out){
-// 	for(size_t i = 0; i < inp1->size; i++)
-// 		out->data[i] = inp1->data[i] / inp2->data[i];
-// }
-
 static inline void MATRIX_ADD(matrix* inp1, matrix* inp2, matrix* out){
 	for(size_t i = 0; i < inp1->rows; i++){
 		double* d1 = inp1->data + (i * inp1->stride);
@@ -123,8 +106,6 @@ static inline void MATRIX_MATMUL(matrix* inp1, matrix* inp2, matrix* out){
 	for(size_t bi = 0; bi < inp1->rows; bi+=BLOCK_SIZE){
 		for(size_t bk = 0; bk < inp1->cols; bk+=BLOCK_SIZE){
 			for(size_t bj = 0; bj < inp2->cols; bj+=BLOCK_SIZE){
-
-
 				for(size_t i = bi; (i < inp1->rows) && (i < bi + BLOCK_SIZE); i++){
 					for(size_t k = bk; (k < inp1->cols) && (k < bk + BLOCK_SIZE); k++){
 						double r = inp1->data[offset(inp1, i, k)];
@@ -133,17 +114,46 @@ static inline void MATRIX_MATMUL(matrix* inp1, matrix* inp2, matrix* out){
 						}
 					} 
 				}
-
-
-
 			} 
 		} 
 	}
 }
 
+static inline void MATRIX_POW(matrix* inp1, matrix* inp2, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++){
+		out->data[i] = pow(inp1->data[i], inp2->data[i]);
+	}
+}
 
+static inline void MATRIX_SIN(matrix* inp1, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++){
+		out->data[i] = sin(inp1->data[i]);
+	}
+}
 
+static inline void MATRIX_TANH(matrix* inp1, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++){
+		out->data[i] = tanh(inp1->data[i]);
+	}
+}
 
+static inline void MATRIX_COS(matrix* inp1, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++){
+		out->data[i] = cos(inp1->data[i]);
+	}
+}
+
+static inline void MATRIX_LOG(matrix* inp1, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++){
+		out->data[i] = log(inp1->data[i]);
+	}
+}
+
+static inline void MATRIX_EXP(matrix* inp1, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++){
+		out->data[i] = exp(inp1->data[i]);
+	}
+}
 
 /*********************************************
  *	SCALAR FUNCTIONS
@@ -181,6 +191,7 @@ static inline double dcos(double x){
 static inline double dtan(double x){
 	return 1 + pow(tan(x), 2);
 }
+
 
 
 static inline double rand_double(){
@@ -223,141 +234,56 @@ static inline double squared_error(double x, double y){
 }
 
 
-
-
-
-
-
-// static inline unary_op get_unary_operation(OPTYPE operation){
-// 	switch (operation) {
-// 		case(SQUARE):
-// 			return matrix_square;
-// 		case(CUBE):
-// 			return  matrix_cube;
-// 		case(LOG):
-// 			return matrix_log;
-// 		case(EXP):
-// 			return matrix_exp;
-// 		case(SIN):
-// 			return matrix_sin;
-// 		case(COS):
-// 			return matrix_cos;
-// 		case(TAN):
-// 			return matrix_tan;
-// 		case(ARCSIN):
-// 			return matrix_arcsin;
-// 		case(ARCCOS):
-// 			return matrix_arccos;
-// 		case(ARCTAN):
-// 			return matrix_arctan;
-// 		case(SINH):
-// 			return matrix_sinh;
-// 		case(COSH):
-// 			return matrix_cosh;
-// 		case(TANH):
-// 			return matrix_tanh;
-// 		case(NONE):
-// 			return NULL; 
-// 		case(ADD):
-// 			return NULL; 
-// 		case(MUL):
-// 			return NULL; 
-// 		case(SUB):
-// 			return NULL;
-// 		case(DIV):
-// 			return NULL;
-// 		case(MATMUL):
-// 			return NULL;
-// 	}
-// }
-//
-// static inline binary_op get_binary_operation(OPTYPE operation){
-// 	switch (operation) {
-// 		case(ADD):
-// 			return matrix_add;
-// 		case(MUL):
-// 			return matrix_mul;
-// 		case(SUB):
-// 			return matrix_sub;
-// 		case(DIV):
-// 			return matrix_div;
-// 		case(MATMUL):
-// 			return NULL;
-// 		case(SQUARE):
-// 			return NULL;
-// 		case(CUBE):
-// 			return NULL;
-// 		case(LOG):
-// 			return NULL;
-// 		case(EXP):
-// 			return NULL;
-// 		case(SIN):
-// 			return NULL;
-// 		case(COS):
-// 			return NULL;
-// 		case(TAN):
-// 			return NULL;
-// 		case(ARCSIN):
-// 			return NULL;
-// 		case(ARCCOS):
-// 			return NULL;
-// 		case(ARCTAN):
-// 			return NULL;
-// 		case(SINH):
-// 			return NULL;
-// 		case(COSH):
-// 			return NULL;
-// 		case(TANH):
-// 			return NULL;
-// 		case(NONE):
-// 			return NULL;
-// 	}
-// }
-//
-//
 static inline char* get_optype_string(OPTYPE op){
 	switch (op) {
 		case ADD: 
 			return "add";
+		case POW: 
+			return "pow";
 		case SUB: 
 			return "sub";
 		case MUL: 
 			return "mul";
 		case DIV: 
 			return "div";
-		case SQUARE: 
-			return "square";
-		case CUBE: 
-			return "cube";
 		case NONE: 
 			return "none";
 		case SIN:
 			return "sin";
 		case COS:
-			return "sin";
-		case TAN:
-			return "tan";
-		case ARCSIN:
-			return "arcsin";
-		case ARCCOS:
-			return "arccos";
-		case ARCTAN:
-			return "arctan";
-		case SINH:
-			return "sinh";
-		case COSH:
-			return "cosh";
-		case TANH: 
-			return "tanh";
+			return "cos";
 		case LOG: 
 			return "log";
 		case EXP: 
 			return "exp";
 		case MATMUL: 
 			return "matmul";
+		case TANH: 
+			return "tanh";
+		// case SQUARE: 
+		// 	return "square";
+		// case CUBE: 
+		// 	return "cube";
+		// case TAN:
+		// 	return "tan";
+		// case ARCSIN:
+		// 	return "arcsin";
+		// case ARCCOS:
+		// 	return "arccos";
+		// case ARCTAN:
+		// 	return "arctan";
+		// case SINH:
+		// 	return "sinh";
+		// case COSH:
+		// 	return "cosh";
 	}
 	return NULL;
 }
 
-#endif // !matrix_INCLUDE_FUNCTIONAL_H
+
+
+
+
+
+#endif // !MATRIX_MATH_H
 
