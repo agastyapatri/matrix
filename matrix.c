@@ -180,6 +180,32 @@ matrix* matrix_sin(matrix* inp1){
 	return out;
 }
 
+matrix* matrix_sigmoid(matrix* inp1){
+	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
+	MATRIX_SIGMOID(inp1, out);
+	if(out->requires_grad){
+		out->op = SIGMOID;
+		out->previous[0] = inp1;
+		out->previous[1] = NULL;
+		out->num_prevs = 1;
+		(*(inp1->ref_count))++;
+	}
+	return out;
+}
+
+matrix* matrix_relu(matrix* inp1){
+	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
+	MATRIX_RELU(inp1, out);
+	if(out->requires_grad){
+		out->op = RELU;
+		out->previous[0] = inp1;
+		out->previous[1] = NULL;
+		out->num_prevs = 1;
+		(*(inp1->ref_count))++;
+	}
+	return out;
+}
+
 matrix* matrix_tanh(matrix* inp1){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
 	MATRIX_TANH(inp1, out);
@@ -261,21 +287,20 @@ matrix* matrix_mul(matrix* inp1, matrix* inp2){
 	return out;
 }
 
-matrix* matrix_div(matrix* inp1, matrix* inp2){
-	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad || inp2->requires_grad);
-	MATRIX_DIV(inp1, inp2, out);
-	out->requires_grad = inp1->requires_grad || inp2->requires_grad;
-	if(out->requires_grad){
-		out->op = DIV;
-		out->previous[0] = inp1;
-		out->previous[1] = inp2;
-		out->num_prevs = 2;
-		(*(inp1->ref_count))++;
-		(*(inp2->ref_count))++;
-	}
-	return out;
-
-}
+// matrix* matrix_div(matrix* inp1, matrix* inp2){
+// 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad || inp2->requires_grad);
+// 	MATRIX_DIV(inp1, inp2, out);
+// 	out->requires_grad = inp1->requires_grad || inp2->requires_grad;
+// 	if(out->requires_grad){
+// 		out->op = DIV;
+// 		out->previous[0] = inp1;
+// 		out->previous[1] = inp2;
+// 		out->num_prevs = 2;
+// 		(*(inp1->ref_count))++;
+// 		(*(inp2->ref_count))++;
+// 	}
+// 	return out;
+// }
 
 matrix* matrix_transpose(matrix* m){
 	matrix* out = (matrix*)malloc(sizeof(matrix));

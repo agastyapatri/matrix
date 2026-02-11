@@ -16,7 +16,7 @@ void matrix_grad(matrix* out){
 	double prev0temp[prev0len];
 	int prev1len = 0;
 	double prev1temp[prev1len];
-	if(out->previous[1]){
+	if(out->num_prevs == 2){
 		prev1len = out->previous[1]->size;
 	}
 	switch (out->op) {
@@ -63,7 +63,16 @@ void matrix_grad(matrix* out){
 				prev0temp[i] = dtanh(out->previous[0]->data[i]);
 			ag_buf_mul(out->grad, prev0temp, prev0temp, prev0len);
 			ag_buf_add(out->previous[0]->grad, prev0temp, out->previous[0]->grad, prev0len);
-
+		case SIGMOID: 
+			for(int i = 0; i < prev0len; i++)
+				prev0temp[i] = out->data[i]*(1 - out->data[i]);
+			ag_buf_mul(out->grad, prev0temp, prev0temp, prev0len);
+			ag_buf_add(out->previous[0]->grad, prev0temp, out->previous[0]->grad, prev0len);
+		case RELU: 
+			for(int i = 0; i < prev0len; i++)
+				prev0temp[i] = drelu(out->data[i]);
+			ag_buf_mul(out->grad, prev0temp, prev0temp, prev0len);
+			ag_buf_add(out->previous[0]->grad, prev0temp, out->previous[0]->grad, prev0len);
 		case NONE: 
 			return;
 		// case MATMUL: 
@@ -72,3 +81,5 @@ void matrix_grad(matrix* out){
 	
 
 }
+
+

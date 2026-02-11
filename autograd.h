@@ -33,7 +33,7 @@ static inline void ag_buf_div(double* inp1, double* inp2, double* out, size_t le
 		out[i] = inp1[i] / inp2[i];
 	}
 }
-// void ag_buf_pow(double* inp1, double* inp2, double* out);
+
 
 
 typedef struct graph {
@@ -47,7 +47,12 @@ void graph_free(graph* tape);
 
 
 
+
+
+
+//	TODO
 void matrix_grad(matrix* out);
+void matrix_backward(matrix* out);
 
 
 

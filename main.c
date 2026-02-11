@@ -18,47 +18,18 @@
 int main(){
 	srand(time(NULL));
 	matrix* a = matrix_arange(-1, 1, 0.1, 1);
-	matrix* b = matrix_arange(-1, 1, 0.1, 1);
-	matrix* c = matrix_add(a, b);
-	matrix* d = matrix_sin(c);
-	matrix* f = matrix_cos(c);
-	matrix* e = matrix_cos(d);
-	matrix_one_grad(e);
-	matrix_grad(e);
-	for(size_t i = 0; i < e->size; i++)
-		printf("%lf\t%lf\n", d->grad[i], f->data[i]);
+	matrix* b = matrix_sin(a);
+	matrix* c = matrix_relu(b);
 
 
+	matrix_print(b);
+	printf("\n");
+	matrix_print(c);
 
-
-
-
+	// matrix_one_grad(c);
+	// matrix_grad(c);
 	// for(size_t i = 0; i < c->size; i++)
-	// 	d->grad[i] = 1.0;
-	//
-	// matrix_grad(d);
-	// for(int i = 0; i < 5; i++){
-	// 	for(int j = 0; j < 5; j++){
-	// 		printf("%lf ", c->grad[i*5 + j]);
-	// 	} 
-	// }
-
-
-
-
-
-
-
-
-
-
-	
-	
-
-
-
-
-
+	// 	printf("%lf\t%lf\n", b->grad[i], d->data[i]);
 
 	return 0;
 }

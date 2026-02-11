@@ -142,6 +142,17 @@ static inline void MATRIX_COS(matrix* inp1, matrix* out){
 		out->data[i] = cos(inp1->data[i]);
 	}
 }
+static inline void MATRIX_SIGMOID(matrix* inp1, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++){
+		out->data[i] = 1.0 / (1 + exp(-inp1->data[i]));
+	}
+}
+
+static inline void MATRIX_RELU(matrix* inp1, matrix* out){
+	for(size_t i = 0; i < inp1->size; i++){
+		out->data[i] = (inp1->data[i] > 0) ? inp1->data[i] : 0;
+	}
+}
 
 static inline void MATRIX_LOG(matrix* inp1, matrix* out){
 	for(size_t i = 0; i < inp1->size; i++){
@@ -192,11 +203,18 @@ static inline double dtan(double x){
 	return 1 + pow(tan(x), 2);
 }
 
+static inline double dsigmoid(double x){
+	return (1.0 / (1 + exp(-x)))*(1 - (1.0 / (1 + exp(-x)))	);
+}
 
+static inline double drelu(double x){
+	return (x > 0) ? 1 : 0;
 
+}
 static inline double rand_double(){
 	return rand()/(double)RAND_MAX;
 }
+
 
 static inline double normal(double x, double mu, double sigma){
 	double temp = ((x - mu)*(x - mu))/(sigma*sigma);
@@ -244,8 +262,8 @@ static inline char* get_optype_string(OPTYPE op){
 			return "sub";
 		case MUL: 
 			return "mul";
-		case DIV: 
-			return "div";
+		// case DIV: 
+		// 	return "div";
 		case NONE: 
 			return "none";
 		case SIN:
@@ -260,8 +278,10 @@ static inline char* get_optype_string(OPTYPE op){
 			return "matmul";
 		case TANH: 
 			return "tanh";
-		// case SQUARE: 
-		// 	return "square";
+		case SIGMOID: 
+			return "sigmoid";
+		case RELU: 
+			return "relu";
 		// case CUBE: 
 		// 	return "cube";
 		// case TAN:
@@ -280,10 +300,4 @@ static inline char* get_optype_string(OPTYPE op){
 	return NULL;
 }
 
-
-
-
-
-
 #endif // !MATRIX_MATH_H
-

@@ -30,25 +30,19 @@
 
 typedef enum {
 	NONE,
-
-	//	binary ops
 	ADD, 
 	SUB,
 	MUL,
-	DIV,
 	MATMUL,
-
-
-	//	unary ops
 	SIN,
 	COS,
 	TANH,
 	LOG, 
 	EXP,
 	POW,
-
+	SIGMOID,
+	RELU,
 	// TODO
-	// TAN,
 	// ARCSIN,
 	// ARCCOS,
 	// ARCTAN,
@@ -57,6 +51,7 @@ typedef enum {
 	// MEAN,
 	// SQUARE,
 	// CUBE,
+	// DIV
 } OPTYPE;
 
 
@@ -136,6 +131,8 @@ matrix* matrix_cos(matrix* inp1);
 matrix* matrix_log(matrix* inp1);
 matrix* matrix_exp(matrix* inp1);
 matrix* matrix_tanh(matrix* inp1);
+matrix* matrix_sigmoid(matrix* inp1);
+matrix* matrix_relu(matrix* inp1);
 
 
 
