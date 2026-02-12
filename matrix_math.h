@@ -95,12 +95,13 @@ static inline void BUF_EXP(double* inp, double* out, size_t size){
 }
 
 static inline void BUF_ADD(double* inp1, double* inp2, double* out, size_t rows, size_t cols, size_t stride){
+	size_t vector_limit = (cols / 4) * 4;
 	for(size_t i = 0; i < rows; i++){
 		double* d1 = inp1 + (i * stride);
 		double* d2 = inp2 + (i * stride);
 		double* o = out + (i * stride);
 		size_t j = 0;
-		for(; j <= cols - 4; j+=4){
+		for(; j <= vector_limit; j+=4){
 			__m256d v1 = _mm256_load_pd(&d1[j]);
 			__m256d v2 = _mm256_load_pd(&d2[j]);
 			__m256d res = _mm256_add_pd(v1, v2);
@@ -110,62 +111,54 @@ static inline void BUF_ADD(double* inp1, double* inp2, double* out, size_t rows,
 			o[j] = d1[j] + d2[j];
 		}
 	}
-	// for(size_t i = 0; i < rows*cols; i++){
-	// 	out[i] = inp1[i] + inp2[i];
-	//
-	// }
-
-
-
-
-
-
-
 }
 
 static inline void BUF_SUB(double* inp1, double* inp2, double* out, size_t rows, size_t cols, size_t stride){
+	size_t vector_limit = (cols / 4) * 4;
 	for(size_t i = 0; i < rows; i++){
 		double* d1 = inp1 + (i * stride);
 		double* d2 = inp2 + (i * stride);
 		double* o = out + (i * stride);
 		size_t j = 0;
-		for(; j <= cols - 4; j+=4){
+		for(; j <= vector_limit; j+=4){
 			__m256d v1 = _mm256_load_pd(&d1[j]);
 			__m256d v2 = _mm256_load_pd(&d2[j]);
 			__m256d res = _mm256_sub_pd(v1, v2);
 			_mm256_store_pd(&o[j], res);
 		}
 		for(; j < cols; j++){
-			o[j] = d1[j] + d2[j];
+			o[j] = d1[j] - d2[j];
 		}
 	}
 }
 
 static inline void BUF_MUL(double* inp1, double* inp2, double* out, size_t rows, size_t cols, size_t stride){
+	size_t vector_limit = (cols / 4) * 4;
 	for(size_t i = 0; i < rows; i++){
 		double* d1 = inp1 + (i * stride);
 		double* d2 = inp2 + (i * stride);
 		double* o = out + (i * stride);
 		size_t j = 0;
-		for(; j <= cols - 4; j+=4){
+		for(; j <= vector_limit; j+=4){
 			__m256d v1 = _mm256_load_pd(&d1[j]);
 			__m256d v2 = _mm256_load_pd(&d2[j]);
 			__m256d res = _mm256_mul_pd(v1, v2);
 			_mm256_store_pd(&o[j], res);
 		}
 		for(; j < cols; j++){
-			o[j] = d1[j] + d2[j];
+			o[j] = d1[j] * d2[j];
 		}
 	}
 }
 
 static inline void BUF_DIV(double* inp1, double* inp2, double* out, size_t rows, size_t cols, size_t stride){
+	size_t vector_limit = (cols / 4) * 4;
 	for(size_t i = 0; i < rows; i++){
 		double* d1 = inp1 + (i * stride);
 		double* d2 = inp2 + (i * stride);
 		double* o = out + (i * stride);
 		size_t j = 0;
-		for(; j <= cols - 4; j+=4){
+		for(; j <= vector_limit; j+=4){
 			__m256d v1 = _mm256_load_pd(&d1[j]);
 			__m256d v2 = _mm256_load_pd(&d2[j]);
 			__m256d res = _mm256_div_pd(v1, v2);

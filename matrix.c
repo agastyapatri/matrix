@@ -99,16 +99,21 @@ void matrix_print(matrix *m){
 		MATRIX_ERROR("ERROR: argument in print_matrix() is NULL\n");
 	}
 	printf("matrix(\n\t[");
-	for (size_t i = 0; i < m->rows ; i++) {
-		if(i>=1) printf("\t");
+
+	for(size_t i = 0; i < m->rows; i++){
+		double* row = m->data + i*m->stride;
+		if(i >= 1) printf("\t");
 		printf("[");
-		for (size_t j = 0; j < m->cols ; j++) {
-			printf("%f", m->data[i*m->cols + j]);
-			if(!(j == m->cols-1)) printf(", ");
+		for(size_t j = 0; j < m->cols; j++){
+			printf("%lf", row[j]);
+			if(j != m->cols-1) printf(", ");
 		}
 		printf("]");
 		if(!(i == m->rows-1)) printf(",\n");
-	};
+
+	}
+
+
 
 	char* opstring = get_optype_string(m->op);
 	printf("]");
@@ -140,10 +145,6 @@ matrix* matrix_matmul(matrix* inp1, matrix* inp2){
 matrix* matrix_add(matrix* inp1, matrix* inp2){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad || inp2->requires_grad);
 	BUF_ADD(inp1->data, inp2->data, out->data, inp1->rows, inp1->cols, inp1->stride);
-	printf("%lf, %lf, %lf\n", out->data[5], out->data[6], out->data[7]);
-
-
-
 	if(out->requires_grad){
 		out->op = ADD;
 		out->previous[0] = inp1;
@@ -154,7 +155,6 @@ matrix* matrix_add(matrix* inp1, matrix* inp2){
 	}
 	return out;
 }
-
 matrix* matrix_pow(matrix* inp1, matrix* inp2){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad || inp2->requires_grad);
 	BUF_POW(inp1->data, inp2->data, out->data, inp1->size);
