@@ -53,6 +53,15 @@ In no particular order:
 -   Parallelizing the underlying routines with SIMD + memory alignment. 
 -   Compatibility with NumPy(?)
 
+### Notes on the Development of this Library
+
+1.  Each public facing `matrix* matrix_<function>(matrix*, matrix*)` calls an underlying kernel defined by `void MATRIX_<FUNCTION>(matrix* inp1, matrix* inp2, matrix* out)`. The kernel does the actual computation between the two matrices. This needs to be taken a step further, where the kernel will only operate on the data buffers, and the public API will handle every other meta-operation. The new kernel signature should be `void BUF_<OPERATION>(double* inp1, double* inp2, double* out, int stride, int padding, int alignement, ...)`
+
+2.  Something is going wrong with my interpretation of SIMD strides and operations; I need to go back to the drawing board on vectorization.
+
+
+
+
 
 ##  **Building and using this library** 
 I do not recommended using this library (yet) for anything even remotely performant or stable. There are many wrinkles waiting to be ironed out, including a more robust testing framework. Using some BLAS / LAPACK descendant is always going to be the better option. For simple hobbyist code, however, the API is simple enough to get up and running quickly.
@@ -63,6 +72,8 @@ ar rcs libmatrix.a matrix.o
 rm matrix.o
 ```
 Do not forget to add `-Ipath/to/matrix.h` in your project LSP settings.
+
+
 
 
 

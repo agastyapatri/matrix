@@ -35,7 +35,6 @@ static inline void ag_buf_div(double* inp1, double* inp2, double* out, size_t le
 }
 
 
-
 typedef struct graph {
 	matrix** nodes;
 	int* ref_count;
@@ -43,11 +42,6 @@ typedef struct graph {
 } graph;
 graph* graph_init();
 void graph_free(graph* tape);
-
-
-
-
-
 
 
 //	TODO

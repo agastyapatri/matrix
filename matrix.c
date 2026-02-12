@@ -111,8 +111,6 @@ void matrix_print(matrix *m){
 	};
 
 	char* opstring = get_optype_string(m->op);
-	// char* opstring = "none";
-	// printf("],\nrequires_grad = %d, optype = %s)\n", m->requires_grad, opstring);
 	printf("]");
 	if(m->requires_grad){
 		printf("\nrequires_grad = %d, optype = %s", m->requires_grad, opstring);
@@ -123,10 +121,10 @@ void matrix_print(matrix *m){
 
 
 matrix* matrix_matmul(matrix* inp1, matrix* inp2){
-	bool reqgrad = inp1->requires_grad || inp2->requires_grad;
-	matrix* out = matrix_alloc(inp1->rows, inp2->cols, reqgrad);
-	MATRIX_MATMUL(inp1, inp2, out);
-	out->requires_grad = inp1->requires_grad || inp2->requires_grad;
+	if((inp1->cols != inp2->rows))
+		MATRIX_ERROR("Invalid shapes for input matrices in matrix_matmul()\n");
+	matrix* out = matrix_alloc(inp1->rows, inp2->cols, inp1->requires_grad || inp2->requires_grad);
+	BUF_MATMUL(inp1->data, inp2->data, out->data, inp1->rows, inp1->cols, inp2->cols);
 	if(out->requires_grad){
 		out->op = MATMUL;
 		out->previous[0] = inp1;
@@ -141,7 +139,11 @@ matrix* matrix_matmul(matrix* inp1, matrix* inp2){
 
 matrix* matrix_add(matrix* inp1, matrix* inp2){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad || inp2->requires_grad);
-	MATRIX_ADD(inp1, inp2, out);
+	BUF_ADD(inp1->data, inp2->data, out->data, inp1->rows, inp1->cols, inp1->stride);
+	printf("%lf, %lf, %lf\n", out->data[5], out->data[6], out->data[7]);
+
+
+
 	if(out->requires_grad){
 		out->op = ADD;
 		out->previous[0] = inp1;
@@ -155,7 +157,7 @@ matrix* matrix_add(matrix* inp1, matrix* inp2){
 
 matrix* matrix_pow(matrix* inp1, matrix* inp2){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad || inp2->requires_grad);
-	MATRIX_POW(inp1, inp2, out);
+	BUF_POW(inp1->data, inp2->data, out->data, inp1->size);
 	if(out->requires_grad){
 		out->op = POW;
 		out->previous[0] = inp1;
@@ -169,7 +171,7 @@ matrix* matrix_pow(matrix* inp1, matrix* inp2){
 
 matrix* matrix_sin(matrix* inp1){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	MATRIX_SIN(inp1, out);
+	BUF_SIN(inp1->data, out->data, inp1->size);
 	if(out->requires_grad){
 		out->op = SIN;
 		out->previous[0] = inp1;
@@ -182,7 +184,7 @@ matrix* matrix_sin(matrix* inp1){
 
 matrix* matrix_sigmoid(matrix* inp1){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	MATRIX_SIGMOID(inp1, out);
+	BUF_SIGMOID(inp1->data, out->data, inp1->size);
 	if(out->requires_grad){
 		out->op = SIGMOID;
 		out->previous[0] = inp1;
@@ -195,7 +197,7 @@ matrix* matrix_sigmoid(matrix* inp1){
 
 matrix* matrix_relu(matrix* inp1){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	MATRIX_RELU(inp1, out);
+	BUF_RELU(inp1->data, out->data, inp1->size);
 	if(out->requires_grad){
 		out->op = RELU;
 		out->previous[0] = inp1;
@@ -208,7 +210,7 @@ matrix* matrix_relu(matrix* inp1){
 
 matrix* matrix_tanh(matrix* inp1){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	MATRIX_TANH(inp1, out);
+	BUF_TANH(inp1->data, out->data, inp1->size);
 	if(out->requires_grad){
 		out->op = TANH;
 		out->previous[0] = inp1;
@@ -221,7 +223,7 @@ matrix* matrix_tanh(matrix* inp1){
 
 matrix* matrix_log(matrix* inp1){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	MATRIX_LOG(inp1, out);
+	BUF_LOG(inp1->data, out->data, inp1->size);
 	if(out->requires_grad){
 		out->op = LOG;
 		out->previous[0] = inp1;
@@ -233,7 +235,7 @@ matrix* matrix_log(matrix* inp1){
 }
 matrix* matrix_exp(matrix* inp1){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	MATRIX_EXP(inp1, out);
+	BUF_EXP(inp1->data, out->data, inp1->size);
 	if(out->requires_grad){
 		out->op = EXP;
 		out->previous[0] = inp1;
@@ -246,7 +248,7 @@ matrix* matrix_exp(matrix* inp1){
 
 matrix* matrix_cos(matrix* inp1){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	MATRIX_COS(inp1, out);
+	BUF_COS(inp1->data, out->data, inp1->size);
 	if(out->requires_grad){
 		out->op = COS;
 		out->previous[0] = inp1;
@@ -259,7 +261,8 @@ matrix* matrix_cos(matrix* inp1){
 
 matrix* matrix_sub(matrix* inp1, matrix* inp2){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad || inp2->requires_grad);
-	MATRIX_SUB(inp1, inp2, out);
+	// MATRIX_SUB(inp1, inp2, out);
+	BUF_SUB(inp1->data, inp2->data, out->data, inp1->rows, inp1->cols, inp1->stride);
 	out->requires_grad = inp1->requires_grad || inp2->requires_grad;
 	if(out->requires_grad){
 		out->op = SUB;
@@ -274,7 +277,8 @@ matrix* matrix_sub(matrix* inp1, matrix* inp2){
 
 matrix* matrix_mul(matrix* inp1, matrix* inp2){
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad || inp2->requires_grad);
-	MATRIX_MUL(inp1, inp2, out);
+	// MATRIX_MUL(inp1, inp2, out);
+	BUF_MUL(inp1->data, inp2->data, out->data, inp1->rows, inp1->cols, inp1->stride);
 	out->requires_grad = inp1->requires_grad || inp2->requires_grad;
 	if(out->requires_grad){
 		out->op = MUL;

@@ -10,9 +10,9 @@
 #include "matrix.h"
 
 #define PI 3.1415926545897932	
-#define SQRT2 1.414213562373	// archimedes' constant
-#define LN2 0.69314718056	// natural log of 2
-#define EPSILON (double)1e-9	// used for error margins in math + log calculations
+#define SQRT2 1.414213562373
+#define LN2 0.69314718056
+#define EPSILON (double)1e-9	
 
 typedef double (*unary_op)(double);
 typedef double (*binary_op)(double, double);
@@ -28,144 +28,154 @@ static inline void MATRIX_BINARY_OP(matrix* inp1, matrix* inp2, matrix* out, bin
 		out->data[i] = function(inp1->data[i], inp2->data[i]);
 }
 
-static inline void MATRIX_ADD(matrix* inp1, matrix* inp2, matrix* out){
-	for(size_t i = 0; i < inp1->rows; i++){
-		double* d1 = inp1->data + (i * inp1->stride);
-		double* d2 = inp2->data + (i * inp2->stride);
-		double* o = out->data + (i * out->stride);
-		size_t j = 0;
-		for(; j <= inp1->cols - 4; j+=4){
-			__m256d v1 = _mm256_load_pd(&d1[j]);
-			__m256d v2 = _mm256_load_pd(&d2[j]);
-			__m256d res = _mm256_add_pd(v1, v2);
-			_mm256_store_pd(&o[j], res);
-		}
-		for(; j < inp1->cols; j++){
-			o[j] = d1[j] + d2[j];
-		}
-	}
-}
-
-static inline void MATRIX_SUB(matrix* inp1, matrix* inp2, matrix* out){
-	for(size_t i = 0; i < inp1->rows; i++){
-		double* d1 = inp1->data + (i * inp1->stride);
-		double* d2 = inp2->data + (i * inp2->stride);
-		double* o = out->data + (i * out->stride);
-		size_t j = 0;
-		for(; j <= inp1->cols - 4; j+=4){
-			__m256d v1 = _mm256_load_pd(&d1[j]);
-			__m256d v2 = _mm256_load_pd(&d2[j]);
-			__m256d res = _mm256_sub_pd(v1, v2);
-			_mm256_store_pd(&o[j], res);
-		}
-		for(; j < inp1->cols; j++){
-			o[j] = d1[j] + d2[j];
-		}
-	}
-}
-
-static inline void MATRIX_MUL(matrix* inp1, matrix* inp2, matrix* out){
-	for(size_t i = 0; i < inp1->rows; i++){
-		double* d1 = inp1->data + (i * inp1->stride);
-		double* d2 = inp2->data + (i * inp2->stride);
-		double* o = out->data + (i * out->stride);
-		size_t j = 0;
-		for(; j <= inp1->cols - 4; j+=4){
-			__m256d v1 = _mm256_load_pd(&d1[j]);
-			__m256d v2 = _mm256_load_pd(&d2[j]);
-			__m256d res = _mm256_mul_pd(v1, v2);
-			_mm256_store_pd(&o[j], res);
-		}
-		for(; j < inp1->cols; j++){
-			o[j] = d1[j] + d2[j];
-		}
-	}
-
-}
-
-
-static inline void MATRIX_DIV(matrix* inp1, matrix* inp2, matrix* out){
-	for(size_t i = 0; i < inp1->rows; i++){
-		double* d1 = inp1->data + (i * inp1->stride);
-		double* d2 = inp2->data + (i * inp2->stride);
-		double* o = out->data + (i * out->stride);
-		size_t j = 0;
-		for(; j <= inp1->cols - 4; j+=4){
-			__m256d v1 = _mm256_load_pd(&d1[j]);
-			__m256d v2 = _mm256_load_pd(&d2[j]);
-			__m256d res = _mm256_div_pd(v1, v2);
-			_mm256_store_pd(&o[j], res);
-		}
-		for(; j < inp1->cols; j++){
-			o[j] = d1[j] + d2[j];
-		}
-	}
-}
-
-static inline void MATRIX_MATMUL(matrix* inp1, matrix* inp2, matrix* out){
-	for(size_t bi = 0; bi < inp1->rows; bi+=BLOCK_SIZE){
-		for(size_t bk = 0; bk < inp1->cols; bk+=BLOCK_SIZE){
-			for(size_t bj = 0; bj < inp2->cols; bj+=BLOCK_SIZE){
-				for(size_t i = bi; (i < inp1->rows) && (i < bi + BLOCK_SIZE); i++){
-					for(size_t k = bk; (k < inp1->cols) && (k < bk + BLOCK_SIZE); k++){
-						double r = inp1->data[offset(inp1, i, k)];
-						for(size_t j = bj; (j < inp2->cols) && (j < bj + BLOCK_SIZE); j++){
-							out->data[offset(out, i, j)] += r*inp2->data[offset(inp2, k, j)];
+static inline void BUF_MATMUL(double* inp1, double* inp2, double* out, size_t inp1rows, size_t inp1cols, size_t inp2cols){
+	for(size_t bi = 0; bi < inp1rows; bi+=BLOCK_SIZE){
+		for(size_t bk = 0; bk < inp1cols; bk+=BLOCK_SIZE){
+			for(size_t bj = 0; bj < inp2cols; bj+=BLOCK_SIZE){
+				for(size_t i = bi; (i < inp1rows) && (i < bi + BLOCK_SIZE); i++){
+					for(size_t k = bk; (k < inp1cols) && (k < bk + BLOCK_SIZE); k++){
+						double r = inp1[i*inp1cols + k];
+						for(size_t j = bj; (j < inp2cols) && (j < bj + BLOCK_SIZE); j++){
+							out[i*inp2cols + j] += r * inp2[k*inp2cols + j];
 						}
 					} 
 				}
 			} 
 		} 
 	}
+
 }
 
-static inline void MATRIX_POW(matrix* inp1, matrix* inp2, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++){
-		out->data[i] = pow(inp1->data[i], inp2->data[i]);
+static inline void BUF_POW(double* inp1, double* inp2, double* out, size_t size){
+	for(size_t i = 0; i < size; i++){
+		out[i] = pow(inp1[i], inp2[i]);
 	}
 }
 
-static inline void MATRIX_SIN(matrix* inp1, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++){
-		out->data[i] = sin(inp1->data[i]);
+static inline void BUF_SIN(double* inp1, double* out, size_t size){
+	for(size_t i = 0; i < size; i++){
+		out[i] = sin(inp1[i]);
 	}
 }
 
-static inline void MATRIX_TANH(matrix* inp1, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++){
-		out->data[i] = tanh(inp1->data[i]);
+static inline void BUF_TANH(double* inp1, double* out, size_t size){
+	for(size_t i = 0; i < size; i++){
+		out[i] = tanh(inp1[i]);
 	}
 }
 
-static inline void MATRIX_COS(matrix* inp1, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++){
-		out->data[i] = cos(inp1->data[i]);
-	}
-}
-static inline void MATRIX_SIGMOID(matrix* inp1, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++){
-		out->data[i] = 1.0 / (1 + exp(-inp1->data[i]));
+static inline void BUF_COS(double* inp1, double* out, size_t size){
+	for(size_t i = 0; i < size; i++){
+		out[i] = cos(inp1[i]);
 	}
 }
 
-static inline void MATRIX_RELU(matrix* inp1, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++){
-		out->data[i] = (inp1->data[i] > 0) ? inp1->data[i] : 0;
+static inline void BUF_SIGMOID(double* inp, double* out, size_t size){
+	for(size_t i = 0; i < size; i++){
+		out[i] = 1.0 / (1 + exp(-inp[i]));
 	}
 }
 
-static inline void MATRIX_LOG(matrix* inp1, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++){
-		out->data[i] = log(inp1->data[i]);
+static inline void BUF_RELU(double* inp, double* out, size_t size){
+	for(size_t i = 0; i < size; i++){
+		out[i] = (inp[i] > 0) ? inp[i] : 0;
 	}
 }
 
-static inline void MATRIX_EXP(matrix* inp1, matrix* out){
-	for(size_t i = 0; i < inp1->size; i++){
-		out->data[i] = exp(inp1->data[i]);
+static inline void BUF_LOG(double* inp, double* out, size_t size){
+	for(size_t i = 0; i < size; i++){
+		out[i] = log(inp[i]);
 	}
 }
 
+static inline void BUF_EXP(double* inp, double* out, size_t size){
+	for(size_t i = 0; i < size; i++){
+		out[i] = exp(inp[i]);
+	}
+}
+
+static inline void BUF_ADD(double* inp1, double* inp2, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* d1 = inp1 + (i * stride);
+		double* d2 = inp2 + (i * stride);
+		double* o = out + (i * stride);
+		size_t j = 0;
+		for(; j <= cols - 4; j+=4){
+			__m256d v1 = _mm256_load_pd(&d1[j]);
+			__m256d v2 = _mm256_load_pd(&d2[j]);
+			__m256d res = _mm256_add_pd(v1, v2);
+			_mm256_store_pd(&o[j], res);
+		}
+		for(; j < cols; j++){
+			o[j] = d1[j] + d2[j];
+		}
+	}
+	// for(size_t i = 0; i < rows*cols; i++){
+	// 	out[i] = inp1[i] + inp2[i];
+	//
+	// }
+
+
+
+
+
+
+
+}
+
+static inline void BUF_SUB(double* inp1, double* inp2, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* d1 = inp1 + (i * stride);
+		double* d2 = inp2 + (i * stride);
+		double* o = out + (i * stride);
+		size_t j = 0;
+		for(; j <= cols - 4; j+=4){
+			__m256d v1 = _mm256_load_pd(&d1[j]);
+			__m256d v2 = _mm256_load_pd(&d2[j]);
+			__m256d res = _mm256_sub_pd(v1, v2);
+			_mm256_store_pd(&o[j], res);
+		}
+		for(; j < cols; j++){
+			o[j] = d1[j] + d2[j];
+		}
+	}
+}
+
+static inline void BUF_MUL(double* inp1, double* inp2, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* d1 = inp1 + (i * stride);
+		double* d2 = inp2 + (i * stride);
+		double* o = out + (i * stride);
+		size_t j = 0;
+		for(; j <= cols - 4; j+=4){
+			__m256d v1 = _mm256_load_pd(&d1[j]);
+			__m256d v2 = _mm256_load_pd(&d2[j]);
+			__m256d res = _mm256_mul_pd(v1, v2);
+			_mm256_store_pd(&o[j], res);
+		}
+		for(; j < cols; j++){
+			o[j] = d1[j] + d2[j];
+		}
+	}
+}
+
+static inline void BUF_DIV(double* inp1, double* inp2, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* d1 = inp1 + (i * stride);
+		double* d2 = inp2 + (i * stride);
+		double* o = out + (i * stride);
+		size_t j = 0;
+		for(; j <= cols - 4; j+=4){
+			__m256d v1 = _mm256_load_pd(&d1[j]);
+			__m256d v2 = _mm256_load_pd(&d2[j]);
+			__m256d res = _mm256_div_pd(v1, v2);
+			_mm256_store_pd(&o[j], res);
+		}
+		for(; j < cols; j++){
+			o[j] = d1[j] + d2[j];
+		}
+	}
+}
 /*********************************************
  *	SCALAR FUNCTIONS
  *********************************************/ 

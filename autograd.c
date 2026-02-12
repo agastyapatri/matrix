@@ -81,5 +81,3 @@ void matrix_grad(matrix* out){
 	
 
 }
-
-

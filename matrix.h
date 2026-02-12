@@ -11,7 +11,7 @@
 #define MAX_PARAM_MATRICES 10
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 64
+#define BLOCK_SIZE 32
 #endif
 #ifndef ALIGNMENT
 #define ALIGNMENT 32
