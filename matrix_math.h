@@ -33,11 +33,17 @@ static inline void BUF_MATMUL(double* inp1, double* inp2, double* out, size_t in
 		for(size_t bk = 0; bk < inp1cols; bk+=BLOCK_SIZE){
 			for(size_t bj = 0; bj < inp2cols; bj+=BLOCK_SIZE){
 				for(size_t i = bi; (i < inp1rows) && (i < bi + BLOCK_SIZE); i++){
+
+
+
+					//	kernel dot prodct loop
 					for(size_t k = bk; (k < inp1cols) && (k < bk + BLOCK_SIZE); k++){
 						double r = inp1[i*inp1cols + k];
 						for(size_t j = bj; (j < inp2cols) && (j < bj + BLOCK_SIZE); j++){
 							out[i*inp2cols + j] += r * inp2[k*inp2cols + j];
 						}
+
+
 					} 
 				}
 			} 
