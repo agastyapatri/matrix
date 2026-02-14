@@ -11,49 +11,49 @@
 #define SIGMA 1
 #define REQUIRES_GRAD 0
 
+void matrix_map(matrix* inp, double (*func)(double)){
+	for(size_t i = 0; i < inp->rows; i++){
+		double* p1gradrow = inp->data + (i * inp->stride);
+		for(size_t j = 0; j < inp->cols; j++){
+			p1gradrow[j] = func(p1gradrow[j]);
+		}
+	}
+}
 
 
 int main(){
 	srand(time(NULL));
-	/*
-	 *	a = 10 
-	 *	b = 20 ; b->grad = dd/dc * dc/db = c->grad * 1 
-	 *	c = a + b; c->grad = dd/dc = d->grad * b 
-	 *	d = c * b; d->grad dd/ dd = 1 
-	 *
-	 */ 
 
-	matrix* inp1 = matrix_ones(5, 5, 1);	//	a  
-	matrix* inp2 = matrix_random_normal(5, 5, -1, 2, 1);	//b  
-	matrix* inp3 = matrix_add(inp1, inp2);	// c = a + b 
-	matrix* inp4 = matrix_mul(inp3, inp2);	// d = c*b 
-    matrix_grad(inp4);
-	// printf("%d\n", inp4->num_prevs);
-
-
-	// for(size_t i = 0; i < inp3->rows; i++){
-	// 	double* row = inp3->data + (i * inp3->stride);
-	// 	for(size_t j = 0; j < inp3->cols; j++){
-	// 		printf("%lf ", row[j]);
-	// 	} 
-	// 	printf("\n");
-	//
-	// }
+	matrix* inp1 = matrix_ones(11, 11, 1);
+	matrix* inp2 = matrix_random_normal(11, 11, -1, 1, 1);
+	matrix* inp3 = matrix_mul(inp1, inp2);
+	matrix* out = matrix_sin(inp2);
+	// matrix* inp5 = matrix_add(inp3, inp4);
+	// matrix* out = matrix_exp(inp5);
+	matrix_grad(out);
 
 
 
 
 
 
+	for(size_t i = 0; i < out->rows; i++){
+		double* p1gradrow = out->previous[0]->grad + (i * out->stride);
+		for(size_t j = 0; j < out->cols; j++){
+			printf("%lf ", p1gradrow[j]);
+		}
+
+		printf("\n");
+	}
+	printf("\n\n");
+
+	matrix_map(inp2, dsin);
+	matrix_print(inp2);
+	
 
 
 
 
 
 
-
-
-
-
-	return 0;
 }
