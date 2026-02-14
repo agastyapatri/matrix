@@ -2,4 +2,5 @@
 -std=c17
 -Wall
 -Wextra 
+-Iinclude/
 
