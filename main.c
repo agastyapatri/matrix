@@ -2,7 +2,9 @@
 #include "matrix_math.h"
 #include "autograd.h"
 #include <immintrin.h>
+#include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 #define INT 1
 #define ROWS INT*1024
@@ -24,23 +26,32 @@ matrix* matrix_map(matrix* inp, double (*func)(double)){
 }
 
 
+
+
 int main(){
 	srand(0);
-
-	matrix* inp1 = matrix_random_normal(5, 5, -1, 1, 1);
+	matrix* inp1 = matrix_linspace(-5, 5, 100, 1);
 	matrix* inp2 = matrix_sigmoid(inp1);
-	matrix* out =  matrix_matmul(inp1, inp2);
-	matrix_print(inp2);
+	matrix* inp3 = matrix_sin(inp2);
+	matrix_grad(inp3);
+	
 
-	// matrix* inp2 = matrix_map(inp1, dsigmoid);
-	// matrix_print(inp2);
+	//	confirming if the gradient of the root node with respect to any arbitrary node is as expected
+	// matrix_grad(inp2);
+	// for(size_t i = 0; i < inp1->rows; i++){
+	// 	double* row = inp1->data + (i * inp1->stride);
+	// 	for(size_t j = 0; j < inp1->cols; j++){
+	// 		printf("%lf ", dsigmoid(row[j]));
+	// 	} 
+	// 	printf("\n");
+	// }
 	// printf("\n");
 	// for(size_t i = 0; i < inp1->rows; i++){
+	//
 	// 	double* row = inp1->grad + (i * inp1->stride);
 	// 	for(size_t j = 0; j < inp1->cols; j++){
 	// 		printf("%lf ", row[j]);
 	// 	} 
 	// 	printf("\n");
 	// }
-
 } 
