@@ -1,6 +1,7 @@
 #include "matrix.h"
 #include "matrix_math.h"
 #include "autograd.h"
+#include <assert.h>
 #include <immintrin.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -27,13 +28,32 @@ matrix* matrix_map(matrix* inp, double (*func)(double)){
 
 
 
+void matmul(double* inp1, double* inp2, double* out, size_t inp1rows, size_t inp1cols, size_t inp1stride, size_t inp2cols, size_t inp2stride, size_t outstride){
+	for(size_t i = 0; i < inp1rows; i++){
+		double* inp1row = inp1 + (i * inp1stride);
+		double* outrow = out + (i * outstride);
+		for(size_t j = 0; j < inp2cols; j++){
+			for(size_t k = 0; k < inp1cols; k++){
+				outrow[j] += inp1row[k] * (*(inp2 + k*inp2stride + j));
+			}
+		}
+	}
+}
 
 int main(){
 	srand(0);
-	matrix* inp1 = matrix_linspace(-5, 5, 100, 1);
-	matrix* inp2 = matrix_sigmoid(inp1);
-	matrix* inp3 = matrix_sin(inp2);
-	matrix_grad(inp3);
+	matrix* inp1 = matrix_random_normal(5, 5, 0, 1, 1);
+	matrix* inp2 = matrix_ones(5, 5, 1);
+	matrix* inp3 = matrix_matmul(inp1, inp2);
+	matrix* out = matrix_alloc(inp1->rows, inp2->cols, 0);
+
+	matmul(inp1->data, inp2->data, out->data, inp1->rows, inp1->cols, inp1->stride, inp2->cols, inp2->stride, out->stride);
+	matrix_print(out);
+
+
+
+
+
 	
 
 	//	confirming if the gradient of the root node with respect to any arbitrary node is as expected
