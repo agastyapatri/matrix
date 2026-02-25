@@ -15,8 +15,24 @@
 #define REQUIRES_GRAD 0
 
 
+
+
+
+
+
 int main(){
 	srand(0);
+	matrix* m1 = matrix_random_uniform(6, 5, 0, 1, 1);
+	matrix* m2 = matrix_random_uniform(5, 6, 0, 1, 1);
+	matrix* m3 = matrix_matmul(m1, m2);
+	matrix_grad(m3);
+
+
+
+
+
+
+
 	return 0;
 
 } 
