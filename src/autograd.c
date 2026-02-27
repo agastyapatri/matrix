@@ -138,6 +138,33 @@ void ad_sum_backward(matrix* out){
 	}
 }
 
+void ad_mean_backward(matrix* out){
+	double ograd = *out->grad;
+	int n = (out->previous[0]->rows * out->previous[0]->cols);
+	for(size_t i = 0; i < out->previous[0]->rows; i++){
+		double* p0gradrow = out->previous[0]->grad + (i * out->previous[0]->stride);
+		for(size_t j = 0; j < out->previous[0]->cols; j++){
+			p0gradrow[j] += (1.0/n) * ograd;
+		}
+	}
+}
+
+void ad_std_backward(matrix* out){
+	double ograd = *out->grad;
+	double odata = *out->data;
+	double mean = 0; 
+	BUF_MEAN(out->previous[0]->data, &mean, out->previous[0]->rows, out->previous[0]->cols, out->previous[0]->stride);
+	int n = (out->previous[0]->rows * out->previous[0]->cols);
+	for(size_t i = 0; i < out->previous[0]->rows; i++){
+		double* p0gradrow = out->previous[0]->grad + (i * out->previous[0]->stride);
+		double* p0datarow = out->previous[0]->data + (i * out->previous[0]->stride);
+		for(size_t j = 0; j < out->previous[0]->cols; j++){
+			p0gradrow[j] += ograd * (1.0 / (n * odata)) * (p0datarow[j] - mean);
+		}
+	}
+
+}
+
 
 void ad_matmul_backward(matrix* out){
 	matrix* inp0 = out->previous[0];
@@ -195,15 +222,6 @@ void ad_mae_backward(matrix* out){
 	}
 }
 
-
-
-
-
-
-
-
-
-
 void matrix_grad(matrix* out){
 	matrix_one_grad(out);
 	switch (out->op) {
@@ -248,6 +266,12 @@ void matrix_grad(matrix* out){
 			return;
 		case MAE: 
 			ad_mae_backward(out);
+			return;
+		case MEAN: 
+			ad_mean_backward(out);
+			return;
+		case STD: 
+			ad_std_backward(out);
 			return;
 		case NONE: 
 			return;

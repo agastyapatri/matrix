@@ -67,9 +67,6 @@ static inline void BUF_MATMUL(double* inp1, double* inp2, double* out, size_t in
 	}
 } 
 
-
-
-
 static inline void BUF_SUM(double* inp1, double* out, size_t rows, size_t cols, size_t stride){
 	*out = 0; 
 	for(size_t i = 0 ; i < rows; i++){
@@ -80,8 +77,7 @@ static inline void BUF_SUM(double* inp1, double* out, size_t rows, size_t cols, 
 	}
 }
 
-//	TODO 
-static inline void BUF_STD(double* inp1, double* out, size_t rows, size_t cols, size_t stride){
+static inline void BUF_MEAN(double* inp1, double* out, size_t rows, size_t cols, size_t stride){
 	*out = 0; 
 	for(size_t i = 0 ; i < rows; i++){
 		double* inp1row = inp1 + (i * stride);
@@ -89,7 +85,24 @@ static inline void BUF_STD(double* inp1, double* out, size_t rows, size_t cols, 
 			*out += inp1row[j];
 		} 
 	}
+	*out /=  (rows * cols);
 }
+
+static inline void BUF_STD(double* inp1, double* std, size_t rows, size_t cols, size_t stride){
+	*std = 0; 
+	double mean = 0;
+	BUF_MEAN(inp1, &mean, rows, cols, stride);
+	for(size_t i = 0; i < rows; i++){
+		double* inp1row = inp1 + (i * stride);
+		for(size_t j = 0; j < cols; j++){
+			*std += (inp1row[j] - mean) * (inp1row[j] - mean);
+		} 
+
+	}
+	*std /= (rows * cols);
+	*std = sqrt(*std);
+}
+
 
 static inline void BUF_ADD(double* inp1, double* inp2, double* out, size_t rows, size_t cols, size_t stride){
 	size_t vector_limit = (cols / 4) * 4;
@@ -310,6 +323,10 @@ static inline char* get_optype_string(OPTYPE op){
 			return "mae";
 		case SUM: 
 			return "sum";
+		case STD: 
+			return "std";
+		case MEAN: 
+			return "mean";
 		case ADD: 
 			return "add";
 		case POW: 

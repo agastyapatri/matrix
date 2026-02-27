@@ -17,16 +17,15 @@
 #define ALIGNMENT 32
 #endif
 
-#define MATRIX_TIMER(function) clock_t start = clock();\
-						function;				\
-						clock_t end = clock();  \
+#define MATRIX_TIMER(function) clock_t start = clock(); \
+						function;						\
+						clock_t end = clock();  		\
 						printf("%0.10f\n", (double)(end - start)/CLOCKS_PER_SEC);
 
 #define MATRIX_NULL(m) (m==NULL) ? 1 : 0
 #define MATRIX_ERROR(msg) printf(msg);	\
 						  exit(EXIT_FAILURE);
 #define IN_COMP_GRAPH(inp1, inp2) inp1->requires_grad || inp2->requires_grad
-
 
 typedef enum {
 	NONE,
@@ -43,6 +42,8 @@ typedef enum {
 	SIGMOID,
 	RELU,
 	SUM,
+	MEAN,
+	STD,
 	MSE,
 	MAE,
 	// ARCSIN,
@@ -50,7 +51,6 @@ typedef enum {
 	// ARCTAN,
 	// SINH,
 	// COSH,
-	// MEAN,
 	// SQUARE,
 	// CUBE,
 	// DIV
@@ -137,10 +137,6 @@ matrix* matrix_tanh(matrix* inp1);
 matrix* matrix_sigmoid(matrix* inp1);
 matrix* matrix_relu(matrix* inp1);
 matrix* matrix_from_raw(double* arr, size_t rows, size_t cols);
-
-
-
-//	TODO: scalar loss functions 
 matrix* matrix_mse(matrix* inp1, const matrix* inp2);
 matrix* matrix_mae(matrix* inp1, const matrix* inp2);
 

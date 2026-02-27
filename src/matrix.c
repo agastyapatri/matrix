@@ -488,11 +488,14 @@ matrix* matrix_min(const matrix* m){
 
 matrix* matrix_mean(matrix* m){
 	assert(!MATRIX_NULL(m));
-	matrix* mean = matrix_alloc(1, 1, 0);
-	for(size_t i = 0; i < m->size; i++){
-		mean->data[0] += m->data[i];
+	matrix* mean = matrix_alloc(1, 1, m->requires_grad);
+	BUF_MEAN(m->data, mean->data, m->rows, m->cols, m->stride);
+	if( mean->requires_grad){
+		mean->op = MEAN;
+		mean->previous[0] = m;
+		mean->num_prevs = 1;
+		mean->ref_count[0]++;
 	}
-	mean->data[0]  /= m->size;
 	return mean;
 }
 
@@ -500,20 +503,14 @@ matrix* matrix_mean(matrix* m){
 matrix* matrix_std(matrix* m){
 	assert(!MATRIX_NULL(m));
 	matrix* std = matrix_alloc(1, 1, m->requires_grad);
-	BUF_MEAN(m->data, std->data, m->rows, m->cols, m->stride);
-
-	double mu  = 0;
-	for(size_t i = 0; i < m->size; i++){
-		mu += m->data[i];
+	BUF_STD(m->data, std->data, m->rows, m->cols, m->stride);
+	if( std->requires_grad){
+		std->op = STD;
+		std->previous[0] = m;
+		std->num_prevs = 1;
+		std->ref_count[0]++;
 	}
-	mu /= m->size;
-	matrix* sigma = matrix_alloc(1,1, 0);
-	for(size_t i = 0; i < m->size; i++){
-		sigma->data[0] = (m->data[i] - mu) * (m->data[i] - mu);
-	}
-	sigma->data[0] /= m->size;
-	sigma->data[0] = sqrt(sigma->data[0]);
-	return sigma;
+	return std;
 }
 
 matrix* matrix_sum(matrix* m){

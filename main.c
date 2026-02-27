@@ -25,12 +25,11 @@ int main(){
 	// matrix* m1 = matrix_random_uniform(6, 6, 0, 1, 1);
 	// matrix* m2 = matrix_random_uniform(6, 6, 0, 1, 1);
 	matrix* m1 = matrix_zeros(6, 6, 1);
-	matrix* m2 = matrix_ones(6, 6, 1);
-	matrix* m3 = matrix_add(m1, m2);
-	matrix* m4 = matrix_sum(m3);
-	matrix_grad(m4);
-	matrix* m3loss = matrix_from_raw(m3->grad, m3->rows, m3->cols);
-	matrix_print(m3loss);
+	matrix* m2 = matrix_random_normal(6, 6, 1, 2, 1);
+	matrix* m3 = matrix_std(m2);
+	matrix_grad(m3);
+	matrix* m2grad = matrix_from_raw(m2->grad, m2->rows, m2->cols);
+	matrix_print(m2grad);
 
 
 
