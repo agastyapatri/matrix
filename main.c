@@ -14,12 +14,6 @@
 #define SIGMA 1
 #define REQUIRES_GRAD 0
 
-
-
-
-
-
-
 int main(){
 	srand(0);
 	// matrix* m1 = matrix_random_uniform(6, 6, 0, 1, 1);
@@ -30,18 +24,7 @@ int main(){
 	matrix_grad(m3);
 	matrix* m2grad = matrix_from_raw(m2->grad, m2->rows, m2->cols);
 	matrix_print(m2grad);
-
-
-
-
-
-
-
-
-
-
 	return 0;
-
 } 
 
 
