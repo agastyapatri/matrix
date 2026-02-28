@@ -1,6 +1,7 @@
 #include "autograd.h"
 #include "matrix.h"
 #include "matrix_math.h"
+#include <stdlib.h>
 void matrix_one_grad(matrix* out){
 	for(size_t i = 0; i < out->size; i++)
 		out->grad[i] = 1.0;
@@ -25,6 +26,7 @@ void ad_mul_backward(matrix* out){
 		}
 	}
 }
+
 void ad_add_backward(matrix* out){
 	for(size_t i = 0; i < out->rows; i++){
 		double* ogradrow = out->grad + (i * out->stride);
@@ -36,6 +38,7 @@ void ad_add_backward(matrix* out){
 		}
 	}
 }
+
 void ad_sub_backward(matrix* out){
 	for(size_t i = 0; i < out->rows; i++){
 		double* ogradrow = out->grad + (i * out->stride);
@@ -223,7 +226,6 @@ void ad_mae_backward(matrix* out){
 }
 
 void matrix_grad(matrix* out){
-	matrix_one_grad(out);
 	switch (out->op) {
 		case ADD:
 			ad_add_backward(out);
@@ -278,37 +280,36 @@ void matrix_grad(matrix* out){
 	}
 } 
 
+void ad_graph_sort(matrix* out, matrix** sorted, int* tape_size, matrix** visited, int* visited_size){
+	for(int i = 0; i < *visited_size; i++){
+		if(visited[i] == out)
+			return;
+	}
+	visited[*visited_size] = out;
+	(*visited_size)++;
+	for(int i = 0; i < out->num_prevs; i++){
+		if(!out->previous[i])
+			break;
+		ad_graph_sort(out->previous[i], sorted, tape_size, visited, visited_size);
+	}
+	sorted[*tape_size] = out;
+	(*tape_size)++;
+}
 
 
 
-// void ad_matmul_backward_alt(matrix* out){
-// 	size_t P = out->previous[0]->rows; 
-// 	size_t Q = out->previous[0]->cols; 
-// 	size_t R = out->previous[1]->cols; 
-// 	double* inp1grad = out->previous[0]->grad;
-// 	double* inp2grad = out->previous[1]->grad;
-// 	double* outgrad = out->grad;
-// 	int inp1stride = out->previous[0]->stride;
-// 	int inp2stride = out->previous[1]->stride;
-// 	int outstride = out->stride;
-//
-//
-// 	// matmul of outgrad and inp2transpose (P, R) x (R, Q) = (P, Q)
-// 	double dinp1[P * Q];
-// 	memset(dinp1, 0, P*Q*sizeof(double));
-// 	for(size_t i = 0; i < P; i++){
-// 		double* outrow = outgrad + (i * outstride);
-// 		double* dinp1row = dinp1 + (i * inp1stride);
-// 		for(size_t k = 0; k < Q; k++){
-// 			double outgrad_ik = outrow[k];
-// 			double* inp2row = inp2grad + (k * inp2stride);
-// 			for(size_t j = 0; j < R; j++){
-// 				dinp1row[j] += outgrad_ik * inp2row[j];
-// 			}
-// 		} 
-// 	}
-//
-// 	double dinp2[Q*R]; 
-// 	memset(dinp1, 0, P*Q*sizeof(double));
-// }
-//
+void matrix_backward(matrix* out){
+	matrix_one_grad(out);
+	matrix** sorted = (matrix**)malloc(GRAPH_POPULATION*sizeof(matrix*));
+	matrix** visited = (matrix**)malloc(GRAPH_POPULATION*sizeof(matrix*));
+	int tape_len = 0; 
+	int visited_len = 0; 
+	ad_graph_sort(out, sorted, &tape_len, visited, &visited_len);
+	for(int i = tape_len - 1; i  >= 0; i--){
+		matrix_grad(sorted[i]);
+	}
+	free(sorted);
+	free(visited);
+}
+
+

@@ -14,8 +14,9 @@
 
 matrix* matrix_alloc(int ROWS, int COLS, bool requires_grad){
 	matrix* m = malloc(sizeof(matrix));
-	if(!m)
+	if(!m){
 		return NULL; 
+	}
 	m->rows = ROWS;
 	m->cols = COLS;
 	m->op = NONE;
@@ -26,14 +27,27 @@ matrix* matrix_alloc(int ROWS, int COLS, bool requires_grad){
 	m->size = m->rows * m->stride;
 	m->bytes = m->size * sizeof(double);
 	m->data = (double*)aligned_alloc(ALIGNMENT, m->bytes);
-	if(!(m->data))
+	if(!(m->data)){
+		free(m->ref_count);
+		free(m);
 		return NULL; 
+	}
+	memset(m->data, 0, m->bytes);
+
+	m->num_prevs = 0; 
+	m->previous[0] = NULL;
+	m->previous[1] = NULL;
+	m->grad = NULL;
 	m->requires_grad = requires_grad;
 	if(m->requires_grad){
-		m->num_prevs = 0; 
 		m->grad = (double*)aligned_alloc(ALIGNMENT, m->bytes);
-		if(!(m->grad))
+		if(!(m->grad)){
+			free(m->ref_count);
+			free(m->data);
+			free(m);
 			return NULL; 
+		}
+		memset(m->grad, 0, m->bytes);
 	}
 	return m;
 }
@@ -527,7 +541,7 @@ matrix* matrix_sum(matrix* m){
 }
 
 
-matrix* matrix_mse(matrix* inp1,const matrix* inp2){
+matrix* matrix_mse(matrix* inp1, matrix* inp2){
 	assert((inp1->rows == inp2->rows) || (inp1->cols == inp2->cols));
 	assert(!(MATRIX_NULL(inp1) || MATRIX_NULL(inp2)));
 	matrix* mse = matrix_alloc(1, 1, inp1->requires_grad || inp2->requires_grad);

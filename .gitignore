@@ -2,4 +2,7 @@ bin/
 *.o 
 *.a 
 Makefile
+main
 roadmap.md 
+build
+

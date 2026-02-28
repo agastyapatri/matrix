@@ -16,15 +16,20 @@
 
 int main(){
 	srand(0);
-	// matrix* m1 = matrix_random_uniform(6, 6, 0, 1, 1);
-	// matrix* m2 = matrix_random_uniform(6, 6, 0, 1, 1);
-	matrix* m1 = matrix_zeros(6, 6, 1);
-	matrix* m2 = matrix_random_normal(6, 6, 1, 2, 1);
-	matrix* m3 = matrix_std(m2);
-	matrix_grad(m3);
-	matrix* m2grad = matrix_from_raw(m2->grad, m2->rows, m2->cols);
-	matrix_print(m2grad);
-	return 0;
+	matrix* m1 = matrix_random_normal(10, 10, -1, 1, 1);
+	matrix* m2 = matrix_random_normal(10, 10, 1, 2, 1);
+	matrix* m3 = matrix_add(m1, m2);
+	matrix* m4 = matrix_sin(m3);
+	matrix* m5 = matrix_random_normal(10, 10, 0, 1, 1);
+	matrix* m6 = matrix_matmul(m4, m2);
+	matrix* m7 = matrix_sigmoid(m6);
+
+	// matrix_print(m6);
+
+	// matrix_backward(m7);
+	// matrix* m6grad = matrix_from_raw(m6->grad, 10, 10);
+	// matrix_print(m6grad);
+
 } 
 
 

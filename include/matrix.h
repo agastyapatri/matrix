@@ -136,10 +136,10 @@ matrix* matrix_exp(matrix* inp1);
 matrix* matrix_tanh(matrix* inp1);
 matrix* matrix_sigmoid(matrix* inp1);
 matrix* matrix_relu(matrix* inp1);
-matrix* matrix_from_raw(double* arr, size_t rows, size_t cols);
-matrix* matrix_mse(matrix* inp1, const matrix* inp2);
+matrix* matrix_mse(matrix* inp1, matrix* inp2);
 matrix* matrix_mae(matrix* inp1, const matrix* inp2);
 
+matrix* matrix_from_raw(double* arr, size_t rows, size_t cols);
 //TODO 
 void	matrix_push_back(matrix* mat, double* array);
 matrix* matrix_sort(const matrix* m);
