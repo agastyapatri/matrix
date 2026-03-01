@@ -1,4 +1,4 @@
-#   **matrix**
+#   **matrixgrad**
 A tiny, self-contained matrix valued autodiff library from scratch, in C.
 This has been my attempt to recreate a small subset of the functionality in PyTorch; mostly for self-edification.
 
@@ -50,17 +50,4 @@ clang -std=c17 -Wall -Wextra -O3 -ffast-math -Iinclude/ -c main.c bin/main.o
 clang -std=c17 -Wall -Wextra bin/main.o bin/autograd.o bin/matrix.o -o main -lm 
 ```
 Do not forget to add `-Ipath/to/matrix.h` in your project LSP settings :)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
