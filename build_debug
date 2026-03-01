@@ -1,6 +1,0 @@
-#!/bin/bash
-clang -std=c17 -Wall -Wextra -mavx2 -mfma  -march=native -g -O0 -Iinclude/  -c src/matrix.c -o bin/matrix.o
-clang -std=c17 -Wall -Wextra -mavx2 -mfma  -march=native -g -O0 -Iinclude/  -c src/autograd.c -o bin/autograd.o
-clang -std=c17 -Wall -Wextra -mavx2 -mfma  -march=native -g -O0 -Iinclude/  -c main.c -o bin/main.o 
-clang -std=c17 -Wall -Wextra -mavx2 -mfma  -march=native -g -O0 bin/main.o bin/matrix.o bin/autograd.o -o main -lm 
-
